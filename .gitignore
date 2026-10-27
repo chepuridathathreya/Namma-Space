@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+namma_pipeline/runs/*
+!namma_pipeline/runs/.gitkeep
+namma_pipeline/*/*.mp4
+namma_pipeline/2_SEND_TO_REMOTE/*.zip
+namma_pipeline/3_PUT_REMOTE_RESULT_HERE/*.zip
+*.zip
+*.mp4
+!test/**/*.mp4
+tmp/

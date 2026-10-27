@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NammaSpace Early Bedroom</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0b0f0e;
+  --panel: rgba(14, 22, 20, 0.78);
+  --line: rgba(160, 200, 190, 0.22);
+  --fg: #e4eeea;
+  --muted: #94a8a1;
+  --accent: #5fd0b8;
+  --warn: #f0b255;
+  --font-body: "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+[hidden] { display: none !important; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: var(--font-body); overflow: hidden; }
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; background: var(--bg); touch-action: none; cursor: grab; }
+#stage.locked { cursor: none; }
+.panel { position: fixed; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; backdrop-filter: blur(6px); font-size: 13px; line-height: 1.45; }
+#head { top: 12px; left: 16px; display: grid; gap: 8px; max-width: calc(100vw - 32px); }
+#head h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: 0.01em; }
+#head .sub { color: var(--muted); font-size: 12px; margin: 0; }
+.modes { display: flex; gap: 6px; flex-wrap: wrap; }
+.modes button { font: 500 12px var(--font-mono); color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+.row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.row span { font: 400 11px var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.modes button[aria-pressed="true"] { background: var(--accent); color: #06231d; border-color: var(--accent); }
+.modes button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#stats { top: 12px; right: 16px; font: 400 12px var(--font-mono); color: var(--muted); text-align: right; }
+#stats b { color: var(--fg); font-weight: 500; }
+#help { bottom: 12px; left: 16px; font-size: 12px; color: var(--muted); max-width: calc(100vw - 32px); }
+@media (max-width: 720px) { #stats { top: auto; bottom: 96px; right: 16px; } #help { font-size: 11px; } }
+#help kbd { font: 500 11px var(--font-mono); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+#hint { left: 50%; bottom: 72px; transform: translateX(-50%); font-size: 13px; color: var(--fg); pointer-events: none; }
+#loading { position: fixed; inset: 0; display: grid; place-items: center; background: var(--bg); z-index: 5; }
+#loading div { width: min(380px, calc(100vw - 32px)); display: grid; gap: 10px; }
+#loading p { margin: 0; font-size: 14px; color: var(--muted); }
+#bar { height: 6px; border-radius: 3px; background: rgba(160, 200, 190, 0.15); overflow: hidden; }
+#bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width 0.15s; }
+#err { color: var(--warn); }
+.homelink { font: 500 12px var(--font-mono); color: var(--accent); text-decoration: none; }
+.homelink:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<canvas id="stage" tabindex="0"></canvas>
+
+<div id="head" class="panel">
+  <a class="homelink" href="/home/">&larr; All scenes</a>
+  <h1>NammaSpace &middot; Early Bedroom</h1>
+  <p class="sub">Walk-through of a 3D Gaussian splat. Floor and walls come from the scan mesh. Scale assumes a 1.5 m phone height.</p>
+  <div class="modes" role="group" aria-label="Display mode">
+    <button type="button" data-mode="splat" aria-pressed="true">1 Splat</button>
+    <button type="button" data-mode="mesh" aria-pressed="false">2 Mesh</button>
+    <button type="button" id="debugBtn" aria-pressed="false">M Walk map</button>
+  </div>
+  <div class="row"><span>Detail</span>
+    <div class="modes" id="detail" role="group" aria-label="Splat detail">
+      <button type="button" data-detail="250000" aria-pressed="false">250k</button>
+      <button type="button" data-detail="500000" aria-pressed="false">500k</button>
+      <button type="button" data-detail="1000000" aria-pressed="true">All</button>
+    </div>
+  </div>
+</div>
+
+<div id="stats" class="panel"><div><b id="fps">--</b> fps</div><div id="pos">x -- y -- z --</div><div><span id="count">--</span> splats</div></div>
+
+<div id="hint" class="panel">Click the scene to start walking</div>
+
+<div id="help" class="panel"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk &nbsp; <kbd>Shift</kbd> run &nbsp; <kbd>Space</kbd> jump &nbsp; mouse look &nbsp; <kbd>Esc</kbd> free the mouse &nbsp; <kbd>R</kbd> back to the door &nbsp; <kbd>M</kbd> walk map &nbsp; <kbd>1</kbd><kbd>2</kbd> splat, mesh</div>
+
+<div id="loading"><div><p id="loadmsg">Loading scene</p><div id="bar"><i id="barfill"></i></div><p id="err" hidden></p></div></div>
+
+<script src="vendor/three.min.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

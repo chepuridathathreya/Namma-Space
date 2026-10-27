@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NammaSpace Scenes</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #0b0f0e;
+  --card: rgba(14, 22, 20, 0.78);
+  --line: rgba(160, 200, 190, 0.22);
+  --fg: #e4eeea;
+  --muted: #94a8a1;
+  --accent: #5fd0b8;
+  --font-body: "Hanken Grotesk", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); min-height: 100vh; }
+main { max-width: 960px; margin: 0 auto; padding: 48px 16px 64px; display: grid; gap: 32px; }
+header h1 { margin: 0 0 8px; font-size: 32px; font-weight: 700; letter-spacing: 0.01em; }
+header p { margin: 0; color: var(--muted); max-width: 60ch; line-height: 1.5; }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr); }
+.card { display: grid; gap: 8px; align-content: start; padding: 20px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; color: inherit; text-decoration: none; }
+.card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
+.card.hero { grid-column: 1 / -1; padding: 28px; border-color: var(--accent); }
+.card h2 { margin: 0; font-size: 20px; }
+.card.hero h2 { font-size: 26px; }
+.card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+.tag { font: 500 11px var(--font-mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
+.go { font: 500 13px var(--font-mono); color: var(--accent); margin-top: 6px; }
+footer { color: var(--muted); font-size: 12px; font-family: var(--font-mono); }
+@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } header h1 { font-size: 26px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>NammaSpace</h1>
+    <p>Walk through real indoor spaces in your browser. Each scene is a 3D Gaussian splat reconstructed from a phone video, with collision so walls and furniture stop you.</p>
+  </header>
+  <div class="grid">
+    <a class="card hero" href="/">
+      <span class="tag">Featured</span>
+      <h2>Room</h2>
+      <p>A real bedroom reconstructed from one phone video. Best quality scene, held-out PSNR 27.1 dB.</p>
+      <span class="go">Open &rarr;</span>
+    </a>
+    <a class="card" href="/hallway/">
+      <span class="tag">Capture v2</span>
+      <h2>Hallway and Bedroom</h2>
+      <p>A longer walk through a hallway into a bedroom. The hallway is excellent, the bedroom end is rougher.</p>
+      <span class="go">Open &rarr;</span>
+    </a>
+    <a class="card" href="/bedroom/">
+      <span class="tag">Early capture</span>
+      <h2>Early Bedroom</h2>
+      <p>Our first bedroom reconstruction, kept to show how the pipeline improved.</p>
+      <span class="go">Open &rarr;</span>
+    </a>
+  </div>
+  <footer>W A S D walk &middot; Shift run &middot; Space jump &middot; M walk map</footer>
+</main>
+</body>
+</html>
