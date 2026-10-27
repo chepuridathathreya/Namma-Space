@@ -71,6 +71,8 @@ Add `?debug` to the address for a performance panel.
 2. On the GPU PC, run `bash RUN_NEW_BUNDLE.sh <zip>` (from `namma_pipeline/remote/`). It writes a result zip.
 3. Put the result zip in `3_PUT_REMOTE_RESULT_HERE/` and run `STEP3_finish_and_open_website.bat`. The site opens at http://localhost:8765/.
 
+Install the Python packages with `pip install -r requirements.txt` (laptop) and `requirements-train.txt` (GPU machine). What hardware you need, why training runs on a separate GPU PC, and what that costs you: [`docs/HARDWARE_AND_REMOTE_SETUP.md`](docs/HARDWARE_AND_REMOTE_SETUP.md).
+
 Full steps and troubleshooting: [`docs/RUN_GUIDE.md`](docs/RUN_GUIDE.md). How each script works: [`docs/HOW_IT_WORKS.md`](docs/HOW_IT_WORKS.md).
 
 ## Repository layout
