@@ -17,6 +17,83 @@ NammaSpace turns a walkthrough video into a 3D Gaussian splat and publishes it a
 
 Click the scene, then use **W A S D** to walk, **Shift** to run, **Space** to jump, the mouse to look, **Esc** to free the mouse, **R** to return to the door, **M** for the collision grid and **N** for the live map. Add `?debug` to the address for a performance panel.
 
+## How it works
+
+One phone video goes in, a walkable 3D scene comes out. Every arrow is labelled with the file that moves along it.
+
+```mermaid
+flowchart TD
+  A["<b>0. FILM</b><br/>Phone video, landscape,<br/>slow steady walk, one loop"] -->|"video.mp4"| S1
+
+  subgraph S1["1. PREPARE · CPU · about 21 min"]
+    B["Pick the sharpest frame<br/>of every half second<br/>(ffmpeg)"] -->|"colour frames"| C["COLMAP<br/>camera position of every frame<br/>plus sparse 3D points"]
+    C -->|"cameras.bin, images.bin,<br/>points3D.bin"| D["Floor and scale<br/>plus collision grid<br/>from the camera path"]
+  end
+
+  S1 -->|"bundle: frames + camera model"| S2
+
+  subgraph S2["2. TRAIN · GPU 16 GB or more · about 14 min"]
+    E["3D Gaussian Splatting<br/>nerfstudio splatfacto<br/>30,000 steps"] -->|"export"| F["splat.ply<br/>about 540,000 Gaussians"]
+  end
+
+  S2 -->|"splat.ply + transforms"| S3
+
+  subgraph S3["3. FINISH · CPU · about 15 s"]
+    G["Align to the floor<br/>remove mirror ghosts<br/>under the floor"] --> H["Sort best-first<br/>and compress<br/>.qsplat, about 8 MB"]
+    G --> I["Collision grid from the splat<br/>combined with the<br/>camera-path grid"]
+  end
+
+  S3 -->|".qsplat + collision.json"| S4
+
+  subgraph S4["4. WEB"]
+    J["Static website<br/>WebGL2 splat renderer<br/>plus collision grid"] --> K["Walk in the browser<br/>W A S D and mouse look<br/>Cloudflare Pages"]
+  end
+
+  style S1 fill:#f4f1e8,stroke:#6f9ab8,color:#222
+  style S2 fill:#f4f1e8,stroke:#9b8bd8,color:#222
+  style S3 fill:#f4f1e8,stroke:#79b08a,color:#222
+  style S4 fill:#f4f1e8,stroke:#d4906a,color:#222
+  classDef film fill:#3a3320,stroke:#b8944a,color:#f3ead2
+  classDef prep fill:#22303a,stroke:#6f9ab8,color:#e4eef5
+  classDef train fill:#2f2a3d,stroke:#9b8bd8,color:#ece8f7
+  classDef fin fill:#26352d,stroke:#79b08a,color:#e6f3ea
+  classDef web fill:#3a2a22,stroke:#d4906a,color:#f7e9e0
+  class A film
+  class B,C,D prep
+  class E,F train
+  class G,H,I fin
+  class J,K web
+```
+
+### The same three stages on one machine or two
+
+The stages never change. Only where they run, and whether you carry a zip by hand, changes.
+
+```mermaid
+flowchart LR
+  subgraph ONE["Single computer: python run_all.py (recommended)"]
+    direction LR
+    a1["1 Prepare"] --> a2["2 Train"] --> a3["3 Finish"] --> a4["Website"]
+  end
+
+  subgraph TWO["Our setup: laptop plus a shared GPU PC"]
+    direction LR
+    l1["Laptop<br/>1 Prepare"] -->|"zip carried by hand"| g2["GPU PC<br/>2 Train"] -->|"result zip carried back"| l3["Laptop<br/>3 Finish"] --> w["Website"]
+  end
+
+  ONE ~~~ TWO
+
+  style ONE fill:#f4f1e8,stroke:#b8944a,color:#222
+  style TWO fill:#f4f1e8,stroke:#6f9ab8,color:#222
+```
+
+| | Single computer | Our two-machine setup |
+|---|---|---|
+| Command | `python run_all.py --video my.mp4` | `STEP1_prepare_video.bat`, then `RUN_NEW_BUNDLE.sh` on the GPU PC, then `STEP3_finish_and_open_website.bat` |
+| Needs | one NVIDIA GPU of 16 GB or more | a laptop for stages 1 and 3 and a GPU PC for stage 2 |
+| Hand-off | none | a zip carried each way |
+| Why we used it | | the laptop GPU has 6 GB, and the lab GPU PC is shared |
+
 ## Three ways to use this repository
 
 | I want to | Do this |

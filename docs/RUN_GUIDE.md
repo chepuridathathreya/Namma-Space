@@ -2,6 +2,8 @@
 
 Last updated: 2026-10-28. How each script works is in [HOW_IT_WORKS.md](HOW_IT_WORKS.md). This page is only the commands.
 
+For a picture of the whole flow and the two setups, see the diagrams in the [README](../README.md#how-it-works).
+
 There are two ways to run it. **Option A, one computer, is the recommended way and needs a single command.** Option B is the two-machine setup we used ourselves.
 
 ---
