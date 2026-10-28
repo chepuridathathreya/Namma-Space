@@ -381,7 +381,9 @@ def stage_pack_for_remote(context):
         "created": datetime.now().isoformat(timespec="seconds"),
     }
     json.dump(scene, open(os.path.join(stage_root, "scene.json"), "w"), indent=2)
-    shutil.copyfile(os.path.join(REMOTE_DIR, "CLAUDE.md"), os.path.join(stage_root, "CLAUDE.md"))
+    notes_file = os.path.join(REMOTE_DIR, "REMOTE_NOTES.md")
+    if os.path.isfile(notes_file):
+        shutil.copyfile(notes_file, os.path.join(stage_root, "REMOTE_NOTES.md"))
     for script in glob.glob(os.path.join(REMOTE_DIR, "*.sh")):
         shutil.copyfile(script, os.path.join(stage_root, "scripts", os.path.basename(script)))
     zip_name = f"{name}_to_remote.zip"
