@@ -69,7 +69,8 @@ rm -f logs/vram.csv
 SAMPLER=$!
 trap 'kill $SAMPLER 2>/dev/null' EXIT
 echo " started at $(stamp)"
-ns-train splatfacto \
+echo " command     : ns-train $METHOD ${MODEL_ARGS[*]:-} (profile $PROFILE)"
+ns-train "$METHOD" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} \
   --data dataset \
   --output-dir outputs \
   --experiment-name "$SCENE" \
@@ -80,7 +81,7 @@ ns-train splatfacto \
   colmap --colmap-path colmap/sparse/0 --images-path images --downscale-factor "$FACTOR"
 RC=$?
 T_TRAIN=$(date +%s)
-[ "$RC" -eq 0 ] || fail "training failed (exit $RC). Log: $LOG. After fixing, you can continue with: RESUME=1 is not automatic here, resume from outputs/"
+[ "$RC" -eq 0 ] || fail "training failed (exit $RC). Log: $LOG. After fixing, you can continue with: RESUME=1 is not automatic here, ask Claude to resume from outputs/"
 echo " finished at $(stamp)"
 
 banner "3/4 exporting the splat file"

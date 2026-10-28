@@ -92,6 +92,7 @@ def main():
 
     print("   [4/4] combining with the camera-path map")
     blocked = sparse_blocked & splat_blocked
+    blocked |= splat_occupied & ~path
     occupied = (sparse_occupied | splat_occupied) & blocked
     blocked[path & ~occupied] = False
     labels, count = ndimage.label(~blocked, structure=np.ones((3, 3)))

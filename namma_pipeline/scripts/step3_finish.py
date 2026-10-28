@@ -118,12 +118,13 @@ def main():
     parser.add_argument("--result", help="result zip (default: newest zip in 3_PUT_REMOTE_RESULT_HERE)")
     parser.add_argument("--title", help="title shown on the website")
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--no-serve", action="store_true", help="build the website and stop without starting the local server")
     parser.add_argument("--smooth-floor", type=float, default=0.0, help="0 to 1: calm the colour of shiny floor gaussians (off by default)")
     arguments = parser.parse_args()
 
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     context = {"args": arguments}
-    stages = Stages("STEP 3", total=3)
+    stages = Stages("STEP 3", total=2 if arguments.no_serve else 3)
     try:
         stages.run("find the result zip and the matching STEP 1 data", lambda: stage_locate(context))
         log_dir = os.path.join(context["run_dir"], "logs")
@@ -131,12 +132,18 @@ def main():
         log_handle = open(os.path.join(log_dir, "step3.log"), "w", encoding="utf-8")
         sys.stdout = Tee(sys.__stdout__, log_handle)
         stages.run("align splat to the collision map, clean it, build the website", lambda: stage_finish(context))
-        stages.run("start the local website", lambda: stage_serve(context))
+        if not arguments.no_serve:
+            stages.run("start the local website", lambda: stage_serve(context))
     except StopPipeline:
         print(stages.table())
         print("\n RESULT: STOPPED. Fix the problem above and run STEP 3 again.")
         sys.exit(1)
     print(stages.table())
+    if arguments.no_serve:
+        print("")
+        print(f" STEP 3 FINISHED. Website files: {context['site']}")
+        print(f"  Serve them with:  python -m http.server 8765 --directory {context['site']}")
+        return
     print("")
     print("=" * 78)
     print(" STEP 3 FINISHED - YOUR WEBSITE IS RUNNING")
