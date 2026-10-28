@@ -1,6 +1,6 @@
 # How Everything Works - a Beginner's Guide
 
-Last updated: 2026-10-15. This guide assumes you know nothing about 3D reconstruction. It explains the idea, every script, every file type, the website, and how the *old* pipeline worked and why it broke. The short plan and round-by-round roadmap are in [00_OVERVIEW_AND_FUTURE_PLAN.md](00_OVERVIEW_AND_FUTURE_PLAN.md).
+Last updated: 2026-10-28. This guide assumes you know nothing about 3D reconstruction. It explains the idea, every script, every file type, the website, and how the *old* pipeline worked and why it broke. To run things, see [RUN_GUIDE.md](RUN_GUIDE.md).
 
 ---
 

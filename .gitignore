@@ -14,3 +14,6 @@ namma_pipeline/3_PUT_REMOTE_RESULT_HERE/*.zip
 *.mp4
 !test/**/*.mp4
 tmp/
+_quarantine/
+namma_pipeline/1b_PUT_EXTRA_PHOTOS_HERE/*
+!test/sample_scene.zip

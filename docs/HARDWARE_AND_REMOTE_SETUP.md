@@ -10,7 +10,7 @@ This page explains what you need to rebuild a scene yourself, why our pipeline i
 | STEP 2, train the 3D Gaussian splat | Remote Linux PC, RTX PRO 6000 Blackwell (98 GB) | NVIDIA GPU with a large amount of memory, CUDA 12.x, `requirements-train.txt` |
 | STEP 3, finish and build the website | the same laptop | Python 3, `requirements.txt` |
 
-If you have a capable NVIDIA GPU on one machine, you do not need a remote PC. Run all three steps on that machine and skip the zip carrying (see "If you have your own GPU").
+If you have a capable NVIDIA GPU on one machine, you do not need a remote PC: `python run_all.py --video your_video.mp4` runs all three steps and skips the zip carrying (see "If you have your own GPU").
 
 ## Requirements
 
@@ -66,21 +66,23 @@ So plan for roughly 16 GB of GPU memory or more at full 1080p. We did not train 
 - **Slow COLMAP on the laptop.** For the Room scene (613 frames) STEP 1 took about 21 minutes, and a 7-minute video at 883 frames took 87 minutes. Bundle adjustment ran on the CPU on our laptop.
 - **The scripts are tied to our layout.** `RUN_NEW_BUNDLE.sh` and the `systemd-run` step assume a Linux user session. They are unnecessary if you train on your own machine.
 
-## If you have your own GPU
+## If you have your own GPU: one command
 
-You can skip the remote hand-off. We have **not** tested this exact route, so expect to adjust paths.
+With a suitable NVIDIA GPU on one Linux machine (or WSL2 on Windows) you do not need the remote hand-off at all:
 
-1. Run STEP 1 to produce the bundle zip, as in the [run guide](RUN_GUIDE.md).
-2. On a Linux machine (or WSL2 with GPU support) with the GPU stack installed, unzip the bundle and run from the unzipped folder:
+```bash
+python run_all.py --check
+python run_all.py --test
+python run_all.py --video my_walkthrough.mp4
+```
 
-   ```bash
-   bash scripts/STEP2_train_on_remote.sh
-   ```
+`--check` lists what is missing, `--test` runs the bundled sample through all three stages in minutes, and `--video` runs your own capture end to end. The options are in the [run guide](RUN_GUIDE.md).
 
-   Optional arguments: `[steps] [downscale 1|2] [cache gpu|cpu] [profile]`. The defaults are 30000 steps, full-size images, GPU image cache, `default` profile. Profiles: `default` (plain splatfacto), `scalereg` (scale regularisation, which reduces long thin "needle" splats), `quality` (splatfacto-big with scale regularisation and a bilateral grid for phone exposure changes).
-3. Copy `results/<scene>_result.zip` into `namma_pipeline/3_PUT_REMOTE_RESULT_HERE/` and run STEP 3.
+How well this is tested:
 
-Native Windows training was not tried. The training script is a bash script written for Linux.
+- STEP 1 and STEP 3 are proven on Windows, and the `run_all.py` preflight and STEP 3 build were run on the sample data.
+- STEP 2 (training) is proven in our two-machine setup on Linux. `run_all.py` calls the same training script directly, but we have **not yet run the full one-machine `--test` on a separate clean GPU machine**, so expect to adjust paths if a tool is installed somewhere unusual.
+- Native Windows training was not tried. The training script is bash, so use WSL2 on Windows.
 
 ## What you can verify without any GPU
 

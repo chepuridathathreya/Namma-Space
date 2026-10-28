@@ -1,20 +1,88 @@
-# How to Run the Pipeline - Step by Step
+# How to Run the Pipeline
 
-Last updated: 2026-10-15. The explanation of why each step exists is in [01_HOW_EVERYTHING_WORKS_BEGINNER_GUIDE.md](01_HOW_EVERYTHING_WORKS_BEGINNER_GUIDE.md). This page is only the clicks.
+Last updated: 2026-10-28. How each script works is in [HOW_IT_WORKS.md](HOW_IT_WORKS.md). This page is only the commands.
 
-The pipeline has three parts. Parts 1 and 3 run on your laptop. Part 2 runs on the remote GPU PC.
-
-```
- LAPTOP  STEP 1  ->  zip  ->  REMOTE PC  STEP 2  ->  zip  ->  LAPTOP  STEP 3  ->  website
-```
+There are two ways to run it. **Option A, one computer, is the recommended way and needs a single command.** Option B is the two-machine setup we used ourselves.
 
 ---
 
-## Before you start (one time)
+## Option A: everything on one computer
+
+### What the computer needs
+
+| Need | Detail |
+|---|---|
+| OS | Linux, or Windows with WSL2 (training is only proven on Linux) |
+| GPU | NVIDIA, 16 GB of GPU memory or more at full 1080p, CUDA 12.x driver and toolkit |
+| Disk | 20 GB free |
+| Tools on PATH | `ffmpeg`, `ffprobe`, COLMAP 3.9 or newer, `ns-train` and `ns-export` (nerfstudio) |
+| Python | 3.11 recommended, with `pip install -r requirements.txt` and, for training, `pip install -r requirements-train.txt` after installing PyTorch for your CUDA version |
+
+The full table, measured GPU memory and why each item is needed are in [HARDWARE_AND_REMOTE_SETUP.md](HARDWARE_AND_REMOTE_SETUP.md).
+
+### Check the machine first
+
+```bash
+python run_all.py --check
+```
+
+It lists every requirement as `ok` or `MISSING` with the fix for each one, and stops without doing any work.
+
+### Try the bundled test sample (no video needed)
+
+```bash
+python run_all.py --test
+```
+
+This uses a small sample scene in `test/sample_scene.zip` (40 frames with the camera model and collision map already solved), trains for 1,000 steps instead of 30,000, and builds the website. It runs through all three stages in minutes and opens the result at http://localhost:8765/. The sample splat is rough on purpose: it proves the chain works on your machine, not the final quality.
+
+### Run on your own video
+
+```bash
+python run_all.py --video path/to/walkthrough.mp4
+```
+
+It checks the machine, then runs STEP 1 (frames, COLMAP, floor and collision map), STEP 2 (training, 30,000 steps) and STEP 3 (align, clean, build the website) in order, prints the time each took, and serves the result at http://localhost:8765/.
+
+Useful options:
+
+| Option | Meaning |
+|---|---|
+| `--name my_scene` | scene name (default: the video file name) |
+| `--steps 15000` | fewer training steps, faster and rougher |
+| `--profile scalereg` or `quality` | training profile, see below |
+| `--downscale 2 --cache cpu` | half-size training images and image cache in system RAM, to lower GPU memory (not measured on small cards) |
+| `--allow-small-gpu` | continue even if the GPU has less than 16 GB |
+| `--window 1` | the sharp-frame picker keeps half as many frames, so COLMAP is much faster |
+| `--camera-height 1.4` | phone height above the floor in metres |
+| `--no-serve` | build the website but do not start the local server |
+| `--finish-only RESULT_ZIP` | skip STEPs 1 and 2 and build the site from an existing result zip (no GPU needed) |
+
+Profiles: `default` (plain splatfacto), `scalereg` (scale regularisation, which reduces long thin "needle" splats), `quality` (splatfacto-big with scale regularisation and a bilateral grid for phone exposure changes).
+
+Typical times on the Room scene (613 frames): STEP 1 about 21 minutes (COLMAP is most of it), STEP 2 about 14 minutes on a large GPU, STEP 3 about 15 seconds.
+
+---
+
+## Filming the video
+
+The capture rules are in Step 0 and Step 0b of Option B below. They apply to both options.
+
+---
+
+## Option B: two machines (laptop plus a GPU PC)
+
+Use this if your laptop cannot train but you have access to a GPU PC. Parts 1 and 3 run on the laptop, part 2 on the GPU PC.
+
+```
+ LAPTOP  STEP 1  ->  zip  ->  GPU PC  STEP 2  ->  zip  ->  LAPTOP  STEP 3  ->  website
+```
+
+### Before you start (one time)
 
 **Laptop** needs: Python 3 with `numpy scipy opencv-python Pillow`, `ffmpeg`, and COLMAP (on PATH, or at `D:\Tools\COLMAP`).
 
-**Remote PC** needs: the conda environment `namma3dgs` (already built) and the file `RUN_NEW_BUNDLE.sh` saved in its workspace folder. That file is in this repo at `namma_pipeline/remote/RUN_NEW_BUNDLE.sh`. Put it on the remote PC once; it takes any bundle zip and does everything.
+**Remote PC** needs: a conda environment named `namma3dgs` with the packages from `requirements-train.txt` (see [HARDWARE_AND_REMOTE_SETUP.md](HARDWARE_AND_REMOTE_SETUP.md)) and the file `RUN_NEW_BUNDLE.sh` saved in its workspace folder. That file is in this repo at `namma_pipeline/remote/RUN_NEW_BUNDLE.sh`. Put it on the remote PC once; it takes any bundle zip and does everything.
 
 ---
 
