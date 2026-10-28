@@ -3,65 +3,519 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>NammaSpace Scenes</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<title>NammaSpace | Walkable digital twins from phone video</title>
+<meta name="description" content="NammaSpace rebuilds real indoor spaces from a single phone video as 3D Gaussian splats with collision, so you can walk through them in the browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
 :root {
   color-scheme: dark;
-  --bg: #0b0f0e;
-  --card: rgba(14, 22, 20, 0.78);
-  --line: rgba(160, 200, 190, 0.22);
-  --fg: #e4eeea;
-  --muted: #94a8a1;
-  --accent: #5fd0b8;
-  --font-body: "Hanken Grotesk", system-ui, sans-serif;
+  --bg: #181A19;
+  --bg-2: #202321;
+  --card: rgba(55, 58, 53, 0.78);
+  --line: rgba(200, 190, 175, 0.22);
+  --line-soft: rgba(200, 190, 175, 0.12);
+  --fg: #ece8e1;
+  --muted: #a9a69d;
+  --accent: #B8944A;
+  --accent2: #D4B068;
+  --warn: #D4B068;
+  --gold: #D4B068;
+  --cloud-mode: dark;
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur: 200ms;
+  --font-body: "DM Sans", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); min-height: 100vh; }
-main { max-width: 960px; margin: 0 auto; padding: 48px 16px 64px; display: grid; gap: 32px; }
-header h1 { margin: 0 0 8px; font-size: 32px; font-weight: 700; letter-spacing: 0.01em; }
-header p { margin: 0; color: var(--muted); max-width: 60ch; line-height: 1.5; }
-.grid { display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr); }
-.card { display: grid; gap: 8px; align-content: start; padding: 20px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; color: inherit; text-decoration: none; }
-.card:hover, .card:focus-visible { border-color: var(--accent); outline: none; }
-.card.hero { grid-column: 1 / -1; padding: 28px; border-color: var(--accent); }
-.card h2 { margin: 0; font-size: 20px; }
-.card.hero h2 { font-size: 26px; }
-.card p { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
-.tag { font: 500 11px var(--font-mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
-.go { font: 500 13px var(--font-mono); color: var(--accent); margin-top: 6px; }
-footer { color: var(--muted); font-size: 12px; font-family: var(--font-mono); }
-@media (max-width: 640px) { .grid { grid-template-columns: 1fr; } header h1 { font-size: 26px; } }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.55; }
+a { color: inherit; }
+img { display: block; max-width: 100%; height: auto; }
+.wrap { width: min(1560px, 100%); margin: 0 auto; padding: 0 clamp(16px, 3.5vw, 56px); }
+.mono { font-family: var(--font-mono); }
+.eyebrow { font: 500 11px var(--font-mono); color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; }
+h1, h2, h3 { margin: 0; line-height: 1.15; letter-spacing: -0.01em; }
+h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 700; }
+h3 { font-size: 18px; font-weight: 600; }
+p { margin: 0; }
+.lede { color: var(--muted); font-size: 17px; max-width: 78ch; }
+section { padding: 56px 0; border-top: 1px solid rgba(200, 190, 175, 0.4); }
+.head { display: grid; gap: 12px; margin-bottom: 36px; }
+
+.nav { position: sticky; top: 0; z-index: 10; background: rgba(24, 26, 25, 0.82); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line-soft); }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; }
+.brand { font-weight: 700; letter-spacing: 0.01em; text-decoration: none; }
+.brand span { color: var(--accent); }
+.nav ul { display: flex; gap: 20px; list-style: none; margin: 0; padding: 0; }
+.nav ul a { position: relative; font: 500 12px var(--font-mono); color: var(--muted); text-decoration: none; text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 0; transition: color var(--dur) var(--ease); }
+.nav ul a::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--gold); transform: scaleX(0); transform-origin: left; transition: transform var(--dur) var(--ease); }
+.nav ul a:hover, .nav ul a:focus-visible { color: var(--fg); outline: none; }
+.nav ul a:hover::after, .nav ul a:focus-visible::after { transform: scaleX(1); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 6px; }
+@media (max-width: 720px) { .nav ul { display: none; } }
+
+.btn { position: relative; overflow: hidden; display: inline-flex; align-items: center; gap: 8px; font: 600 14px var(--font-body); text-decoration: none; padding: 12px 20px; border-radius: 10px; border: 1px solid var(--line); color: var(--fg); transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), border-color var(--dur) var(--ease), background-color var(--dur) var(--ease); }
+.btn::before { content: ""; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.28) 50%, transparent 70%); transform: translateX(-120%); transition: transform 520ms var(--ease); pointer-events: none; }
+.btn:hover::before, .btn:focus-visible::before { transform: translateX(120%); }
+.btn:hover, .btn:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(184, 148, 74, 0.35); }
+.btn:active { transform: translateY(0); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #181A19; }
+.btn:hover, .btn:focus-visible { border-color: var(--gold); }
+.btn.primary:hover, .btn.primary:focus-visible { background: #C9A55C; border-color: #C9A55C; }
+
+.hero { position: relative; overflow: hidden; padding: 56px 0 48px; border-top: 0; background: radial-gradient(900px 420px at 80% 0%, rgba(184, 148, 74, 0.18), transparent 70%), radial-gradient(700px 400px at 10% 100%, rgba(212, 176, 104, 0.08), transparent 70%); }
+.hero .wrap { position: relative; z-index: 1; }
+#cloud { position: fixed; inset: 0; z-index: -1; width: 100%; height: 100%; display: block; pointer-events: none; }
+.hero h1 em { font-style: normal; background: linear-gradient(90deg, var(--accent2), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .wrap { display: grid; gap: clamp(24px, 4vw, 72px); grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); align-items: center; min-height: min(640px, 80vh); }
+.hero h1 { font-size: clamp(34px, 4.6vw, 68px); font-weight: 700; margin: 12px 0 18px; }
+.cta { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.facts { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line-soft); }
+.fact b { display: block; font: 500 22px var(--font-mono); color: var(--fg); }
+.fact span { font-size: 12px; color: var(--muted); }
+.shot { position: relative; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--bg-2); box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.shot img { transition: transform 400ms var(--ease); }
+.shot:hover { border-color: var(--accent); box-shadow: 0 28px 70px rgba(184, 148, 74, 0.25); }
+.shot:hover img { transform: scale(1.015); }
+.shot figcaption { position: absolute; left: 12px; bottom: 12px; font: 500 11px var(--font-mono); background: rgba(24, 26, 25, 0.82); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; color: var(--muted); }
+@media (max-width: 880px) { .hero .wrap { grid-template-columns: 1fr; } }
+
+.cols3 { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+.card { display: grid; gap: 10px; align-content: start; padding: 24px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.card:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4); }
+.card p { color: var(--muted); font-size: 14px; }
+.card .num { font: 500 12px var(--font-mono); color: var(--gold); }
+@media (max-width: 880px) { .cols3 { grid-template-columns: 1fr; } }
+
+.compare { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; margin-top: 16px; }
+.compare .card.us { border-color: var(--accent); }
+.compare ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14px; color: var(--muted); }
+.compare li::before { content: "\2013"; margin-right: 8px; color: var(--muted); }
+.compare .us li::before { content: "+"; color: var(--accent); font-family: var(--font-mono); }
+@media (max-width: 640px) { .compare { grid-template-columns: 1fr; } }
+
+.flow { display: grid; gap: 14px; grid-template-columns: repeat(4, 1fr); counter-reset: step; }
+.step { position: relative; display: grid; gap: 12px; align-content: start; padding: 24px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.step:hover { transform: translateY(-3px); border-color: var(--accent); box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4); }
+.step:not(:last-child)::after { content: ""; position: absolute; top: 50%; right: -15px; width: 14px; height: 14px; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); transform: translateY(-50%) rotate(45deg); }
+.step .icon { width: 52px; height: 52px; border-radius: 10px; border: 1px solid var(--line); display: grid; place-items: center; background: rgba(184, 148, 74, 0.06); }
+.step svg { width: 32px; height: 32px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.step h3 { font-size: 16px; }
+.step .plain { font-size: 14px; color: var(--fg); }
+.step .tech { font: 400 12px/1.55 var(--font-mono); color: var(--muted); border-top: 1px solid var(--line-soft); padding-top: 10px; }
+@media (max-width: 960px) { .flow { grid-template-columns: repeat(2, 1fr); } .step:nth-child(2)::after { display: none; } }
+@media (max-width: 560px) { .flow { grid-template-columns: 1fr; } .step::after { display: none; } }
+
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+table { width: 100%; border-collapse: collapse; min-width: 720px; font-size: 14px; }
+th, td { text-align: left; padding: 14px 16px; border-bottom: 1px solid var(--line-soft); white-space: nowrap; }
+th { font: 500 11px var(--font-mono); color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+tr:last-child td { border-bottom: 0; }
+td.num { font-family: var(--font-mono); }
+td.best { color: var(--gold); font-weight: 600; }
+td.na { color: var(--muted); }
+.note { font-size: 12px; color: var(--muted); margin-top: 12px; max-width: 80ch; }
+
+.progress { display: grid; gap: 12px; margin-top: 32px; padding: 22px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.progress h3 { font-size: 15px; }
+.bar { display: grid; grid-template-columns: 190px 1fr 64px; gap: 12px; align-items: center; font-size: 13px; }
+.bar .track { height: 10px; border-radius: 5px; background: rgba(200, 190, 175, 0.12); overflow: hidden; }
+.bar .fill { display: block; height: 100%; background: rgba(184, 148, 74, 0.45); border-radius: 5px; }
+.bar.top .fill { background: var(--accent); }
+.bar .val { font: 500 13px var(--font-mono); text-align: right; }
+@media (max-width: 560px) { .bar { grid-template-columns: 1fr 64px; } .bar .track { grid-column: 1 / -1; order: 3; } }
+
+.viewer { display: grid; gap: 32px; grid-template-columns: 1.3fr 1fr; align-items: center; }
+.viewer ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 16px; grid-column: 2; grid-row: 1 / span 2; }
+.viewer li { display: grid; gap: 4px; padding-left: 16px; border-left: 2px solid var(--accent); }
+.viewer li b { font-weight: 600; }
+.viewer li span { color: var(--muted); font-size: 14px; }
+kbd { font: 500 11px var(--font-mono); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+@media (max-width: 880px) { .viewer { grid-template-columns: 1fr; } .viewer ul { grid-column: 1; grid-row: auto; } }
+
+.scenes { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); }
+.scene { display: grid; grid-template-rows: auto 1fr; background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; text-decoration: none; color: inherit; cursor: pointer; transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease); }
+.scene:hover, .scene:focus-visible { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45); outline: none; }
+.scene.best { border-color: var(--accent); }
+.scene .pic { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--bg-2); }
+.scene .pic img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.scene:hover .pic img { transform: scale(1.03); }
+.scene .badge { position: absolute; top: 10px; left: 10px; font: 500 11px var(--font-mono); text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px; border-radius: 6px; background: rgba(24, 26, 25, 0.85); border: 1px solid var(--line); color: var(--muted); }
+.scene.best .badge { color: var(--gold); border-color: var(--gold); }
+.scene .body { display: grid; gap: 10px; align-content: start; padding: 18px; }
+.scene .body p { color: var(--muted); font-size: 14px; }
+.scene dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 12px; }
+.scene dt { color: var(--muted); font-family: var(--font-mono); }
+.scene dd { margin: 0; font-family: var(--font-mono); text-align: right; }
+.scene .go { font: 500 13px var(--font-mono); color: var(--gold); margin-top: 4px; transition: letter-spacing var(--dur) var(--ease); }
+.scene:hover .go, .scene:focus-visible .go { letter-spacing: 0.06em; }
+@media (max-width: 960px) { .scenes { grid-template-columns: 1fr; } }
+
+.limits { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+.limits .card.next { border-color: var(--accent); }
+.limits ul { margin: 0; padding-left: 18px; display: grid; gap: 8px; color: var(--muted); font-size: 14px; }
+@media (max-width: 720px) { .limits { grid-template-columns: 1fr; } }
+
+footer { padding: 36px 0 48px; border-top: 1px solid var(--line-soft); color: var(--muted); font-size: 12px; font-family: var(--font-mono); }
+footer .wrap { display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } .btn:hover, .card:hover, .step:hover, .scene:hover { transform: none; } }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>NammaSpace</h1>
-    <p>Walk through real indoor spaces in your browser. Each scene is a 3D Gaussian splat reconstructed from a phone video, with collision so walls and furniture stop you.</p>
-  </header>
-  <div class="grid">
-    <a class="card hero" href="/">
-      <span class="tag">Featured</span>
-      <h2>Room</h2>
-      <p>A real bedroom reconstructed from one phone video. Best quality scene, held-out PSNR 27.1 dB.</p>
-      <span class="go">Open &rarr;</span>
-    </a>
-    <a class="card" href="/hallway/">
-      <span class="tag">Capture v2</span>
-      <h2>Hallway and Bedroom</h2>
-      <p>A longer walk through a hallway into a bedroom. The hallway is excellent, the bedroom end is rougher.</p>
-      <span class="go">Open &rarr;</span>
-    </a>
-    <a class="card" href="/bedroom/">
-      <span class="tag">Early capture</span>
-      <h2>Early Bedroom</h2>
-      <p>Our first bedroom reconstruction, kept to show how the pipeline improved.</p>
-      <span class="go">Open &rarr;</span>
-    </a>
+
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top">Namma<span>Space</span></a>
+    <ul>
+      <li><a href="#why">Why it is different</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#evidence">Evidence</a></li>
+      <li><a href="#viewer">Viewer</a></li>
+      <li><a href="#scenes">Scenes</a></li>
+    </ul>
+    <a class="btn primary" href="/room/">Enter the room</a>
   </div>
-  <footer>W A S D walk &middot; Shift run &middot; Space jump &middot; M walk map</footer>
-</main>
+</nav>
+
+<header class="hero" id="top">
+  <canvas id="cloud" aria-hidden="true"></canvas>
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">IIT Techfest 2026 &middot; NammaSpace challenge</span>
+      <h1>Walk through a real room, <em>rebuilt from one phone video.</em></h1>
+      <p class="lede">NammaSpace turns an ordinary phone walkthrough into a photo-real 3D copy of the space that runs in your browser, with collision so walls and furniture stop you. No install, no scanner, no hand modelling.</p>
+      <div class="cta">
+        <a class="btn primary" href="/room/">Walk through the room &rarr;</a>
+        <a class="btn" href="#how">See how it works</a>
+      </div>
+      <div class="facts">
+        <div class="fact"><b>27.14 dB</b><span>held-out PSNR, room scene</span></div>
+        <div class="fact"><b>1 video</b><span>per scene, nothing merged</span></div>
+        <div class="fact"><b>10 cm</b><span>collision grid resolution</span></div>
+      </div>
+    </div>
+    <figure class="shot" style="margin:0">
+      <img src="img/room.jpg" width="1280" height="720" alt="A bedroom rendered from the 3D Gaussian splat in the browser viewer" fetchpriority="high">
+      <figcaption>Live render in the browser, not a photo</figcaption>
+    </figure>
+  </div>
+</header>
+
+<section id="why">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">What this achieves</span>
+      <h2>A walkable digital twin, not a 3D model</h2>
+      <p class="lede">A normal 3D model is built by an artist or a mesh generator and is lit by guesswork. NammaSpace fits half a million translucent 3D Gaussians directly to the real video frames, so the room keeps its real colour, reflections and soft edges.</p>
+    </div>
+    <div class="cols3">
+      <article class="card">
+        <span class="num">01</span>
+        <h3>Learned from photos</h3>
+        <p>Every Gaussian is optimised until its renders match the original frames. We hold frames back and score the render against them, so quality is measured rather than claimed.</p>
+      </article>
+      <article class="card">
+        <span class="num">02</span>
+        <h3>Looks and physics are separate</h3>
+        <p>The splat draws the room. A separate 10 cm collision grid, built from the splat and the camera path, decides where you can stand. You cannot walk through the bed or the wardrobe.</p>
+      </article>
+      <article class="card">
+        <span class="num">03</span>
+        <h3>Runs where judges are</h3>
+        <p>Each scene is a single 8 to 11 MB file streamed to a plain web page, drawn by our own WebGL2 splat renderer. Open a link and walk.</p>
+      </article>
+    </div>
+    <div class="compare">
+      <article class="card">
+        <h3>An ordinary 3D model</h3>
+        <ul>
+          <li>Surfaces and textures made by hand or by a mesh generator</li>
+          <li>Lighting is approximated, reflections are baked or missing</li>
+          <li>Looks like a model, however well it is made</li>
+        </ul>
+      </article>
+      <article class="card us">
+        <h3>NammaSpace</h3>
+        <ul>
+          <li>Appearance learned from the real frames, view by view</li>
+          <li>Soft edges, glossy floor and fabric detail come from the data</li>
+          <li>Collision comes from the scan itself, not a hand-placed box</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">How it works</span>
+      <h2>From a phone video to a place you can walk in</h2>
+      <p class="lede">Four stages, one command each. Plain description on top, what actually runs underneath.</p>
+    </div>
+    <div class="flow">
+      <article class="step">
+        <div class="icon"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="9" y="3" width="14" height="26" rx="3"/><path d="M14 6h4M14 25h4"/><circle cx="16" cy="15" r="3"/></svg></div>
+        <h3>1. Phone video</h3>
+        <p class="plain">Walk slowly around the room while filming.</p>
+        <p class="tech">Sharpest-frame picker keeps the crispest frame in each half-second window. Blurry frames are dropped.</p>
+      </article>
+      <article class="step">
+        <div class="icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 24l7-10 5 6 4-8 6 12"/><circle cx="12" cy="14" r="1.5"/><circle cx="21" cy="12" r="1.5"/><circle cx="17" cy="20" r="1.5"/></svg></div>
+        <h3>2. COLMAP</h3>
+        <p class="plain">Work out where the camera was for every frame.</p>
+        <p class="tech">Structure-from-Motion solves each camera pose and a sparse point cloud. Poses are final and never re-run.</p>
+      </article>
+      <article class="step">
+        <div class="icon"><svg viewBox="0 0 32 32" aria-hidden="true"><ellipse cx="11" cy="12" rx="7" ry="4" transform="rotate(-20 11 12)"/><ellipse cx="21" cy="19" rx="7" ry="3.5" transform="rotate(25 21 19)"/><ellipse cx="14" cy="23" rx="5" ry="3" transform="rotate(-10 14 23)"/></svg></div>
+        <h3>3. 3D Gaussian Splatting</h3>
+        <p class="plain">Grow a cloud of soft 3D blobs that reproduce the real views.</p>
+        <p class="tech">nerfstudio splatfacto, 30,000 steps, full-size frames, trained on an RTX PRO 6000 Blackwell.</p>
+      </article>
+      <article class="step">
+        <div class="icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 4h24v24H4zM4 12h24M4 20h24M12 4v24M20 4v24"/><circle cx="16" cy="16" r="2.5"/></svg></div>
+        <h3>4. Walkable digital twin</h3>
+        <p class="plain">Add floor, walls and furniture collision, then publish.</p>
+        <p class="tech">Floor-aligned and scaled, 10 cm grid with a 25 cm body margin, W A S D controls in a WebGL2 viewer.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="evidence">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Evidence</span>
+      <h2>Three experiments, measured</h2>
+      <p class="lede">Quality is scored on frames the model never saw during training. Figures come from each scene's training report.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Scene</th><th>Frames</th><th>Gaussians</th><th>PSNR</th><th>SSIM</th><th>LPIPS</th><th>Training</th><th>Walkable floor</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Early bedroom</td><td class="num na">not recorded</td><td class="num">700,000 shown</td><td class="num na">&ndash;</td><td class="num na">&ndash;</td><td class="num na">&ndash;</td><td class="num na">&ndash;</td><td class="num">8.1 m&sup2;</td></tr>
+          <tr><td>Hallway and bedroom</td><td class="num">868</td><td class="num">650,654</td><td class="num">26.46 dB</td><td class="num">0.874</td><td class="num">0.244</td><td class="num">995 s</td><td class="num">15.8 m&sup2;</td></tr>
+          <tr><td>Room</td><td class="num">613</td><td class="num">541,337</td><td class="num best">27.14 dB</td><td class="num best">0.913</td><td class="num best">0.191</td><td class="num">819 s</td><td class="num">4.3 m&sup2;</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">PSNR and SSIM: higher is better. LPIPS: lower is better. Scores are measured on frames held out from training. Walkable floor is the area your body centre can reach after the 25 cm margin, so it is smaller than the room. The early bedroom predates our evaluation step, so no held-out figures exist for it.</p>
+    <div class="progress">
+      <h3>Hallway capture: held-out PSNR as the pipeline improved</h3>
+      <div class="bar"><span>Hallway v1, 709 frames</span><span class="track"><i class="fill" style="width:78.5%"></i></span><span class="val">23.56</span></div>
+      <div class="bar"><span>Hallway v2, 868 frames</span><span class="track"><i class="fill" style="width:88.2%"></i></span><span class="val">26.46</span></div>
+      <div class="bar top"><span>Room v1, sharpest frames</span><span class="track"><i class="fill" style="width:90.5%"></i></span><span class="val">27.14</span></div>
+      <p class="note">Bars scale from 0 to 30 dB. Room v1 is a different scene, shown for pipeline progress rather than a like-for-like comparison.</p>
+    </div>
+  </div>
+</section>
+
+<section id="viewer">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">The viewer</span>
+      <h2>Built to be explored, not just watched</h2>
+    </div>
+    <div class="viewer">
+      <figure class="shot" style="margin:0">
+        <img src="img/room_ui.jpg" width="1280" height="720" alt="The viewer with the live map at the bottom left, controls strip and display modes" loading="lazy">
+        <figcaption>The viewer in the room scene</figcaption>
+      </figure>
+      <figure class="shot" style="margin:0;grid-column:1">
+        <img src="img/live_map.jpg" width="900" height="360" alt="Close view of the live map showing walkable floor in cyan, obstacles in amber, and the player position with viewing cone" loading="lazy">
+        <figcaption>Live map and controls, close up</figcaption>
+      </figure>
+      <ul>
+        <li><b>Live map on the left</b><span>Drawn from the same collision grid the walls use. Your position, viewing cone, walkable floor and obstacles update as you move. Press <kbd>N</kbd> to hide it.</span></li>
+        <li><b>First-visit guide</b><span>A short card explains movement, look, run, jump and the view modes. Reopen it from the Guide button.</span></li>
+        <li><b>Inspect the collision</b><span>Press <kbd>M</kbd> to overlay the collision grid in the 3D view. Press <kbd>2</kbd> to see the scan mesh where a scene has one.</span></li>
+        <li><b>Controls</b><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> walk, <kbd>Shift</kbd> run, <kbd>Space</kbd> jump, mouse to look, <kbd>R</kbd> back to the door.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="scenes">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">The scenes</span>
+      <h2>A progression of experiments</h2>
+      <p class="lede">Each scene is one video and one reconstruction. We kept the earlier ones online so you can see what changed.</p>
+    </div>
+    <div class="scenes">
+      <a class="scene" href="/bedroom/">
+        <div class="pic"><img src="img/bedroom.jpg" width="1280" height="720" alt="Early bedroom reconstruction" loading="lazy"><span class="badge">Experiment 1 &middot; early</span></div>
+        <div class="body">
+          <h3>Early Bedroom</h3>
+          <p>Our first bedroom reconstruction. The ceiling and distant walls are rough, which is the baseline we improved on.</p>
+          <dl><dt>Splats</dt><dd>700,000</dd><dt>Collision</dt><dd>52 &times; 71 cells</dd></dl>
+          <span class="go">Open &rarr;</span>
+        </div>
+      </a>
+      <a class="scene" href="/hallway/">
+        <div class="pic"><img src="img/hallway.jpg" width="1280" height="720" alt="Hallway and bedroom reconstruction" loading="lazy"><span class="badge">Experiment 2 &middot; longer capture</span></div>
+        <div class="body">
+          <h3>Hallway and Bedroom</h3>
+          <p>A longer walk from a hallway into a bedroom. The hallway is excellent, the bedroom end is rougher.</p>
+          <dl><dt>Held-out PSNR</dt><dd>26.46 dB</dd><dt>Collision</dt><dd>89 &times; 74 cells</dd></dl>
+          <span class="go">Open &rarr;</span>
+        </div>
+      </a>
+      <a class="scene best" href="/room/">
+        <div class="pic"><img src="img/room.jpg" width="1280" height="720" alt="Room reconstruction" loading="lazy"><span class="badge">Experiment 3 &middot; best</span></div>
+        <div class="body">
+          <h3>Room</h3>
+          <p>A real bedroom from one phone video with the sharpest-frame picker. Our best quality scene.</p>
+          <dl><dt>Held-out PSNR</dt><dd>27.14 dB</dd><dt>Collision</dt><dd>58 &times; 53 cells</dd></dl>
+          <span class="go">Open &rarr;</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Honest limits and next steps</span>
+      <h2>What works today, and what comes next</h2>
+    </div>
+    <div class="limits">
+      <article class="card">
+        <h3>Known limits</h3>
+        <ul>
+          <li>Ceilings and areas the camera barely saw are rough or dark.</li>
+          <li>Collision is a 2D floor grid. It stops you at walls and furniture but does not model stairs or overhangs.</li>
+          <li>Scale assumes a fixed phone height rather than a measured reference object.</li>
+        </ul>
+      </article>
+      <article class="card next">
+        <h3>Next</h3>
+        <ul>
+          <li>Points of interest placed on the same grid the live map already reads.</li>
+          <li>A* route finding between points of interest, drawn on the live map and in 3D.</li>
+          <li>Stronger collision where one source of evidence disagrees with the other.</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>NammaSpace &middot; built for IIT Techfest 2026</span>
+    <span>W A S D walk &middot; Shift run &middot; Space jump &middot; N live map &middot; M collision grid</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+  window.scrollTo(0, 0);
+  var light = getComputedStyle(document.documentElement).getPropertyValue("--cloud-mode").trim() === "light";
+  var cv = document.getElementById("cloud");
+  var cx = cv.getContext("2d");
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var pts = [], W = 0, H = 0, dpr = 1, mx = 0, my = 0, tmx = 0, tmy = 0, boost = 0, boostTarget = 0, cursorX = -9999, cursorY = -9999, t0 = performance.now();
+  var R = 7, D = 12, HT = 4.6;
+  function rnd(a, b) { return a + Math.random() * (b - a); }
+  function add(x, y, z, kind) { pts.push({ x: x, y: y, z: z, sx: rnd(-16, 16), sy: rnd(-8, 14), sz: rnd(-16, 16), k: kind, ph: Math.random() * 6.28, d: Math.random() * 0.6 }); }
+  function build() {
+    pts = [];
+    var i, a, b, c;
+    for (i = 0; i < 6500; i++) add(rnd(-R, R), 0, rnd(-D, 1), 0);
+    for (i = 0; i < 3200; i++) add(rnd(-R, R), rnd(0, HT), -D, 1);
+    for (i = 0; i < 2600; i++) add(-R, rnd(0, HT), rnd(-D, 1), 1);
+    for (i = 0; i < 2600; i++) add(R, rnd(0, HT), rnd(-D, 1), 1);
+    for (i = 0; i < 2600; i++) add(rnd(-R, R), HT, rnd(-D, 1), 0);
+    for (i = 0; i < 420; i++) {
+      add(rnd(-R, R), 0, -D, 2); add(rnd(-R, R), HT, -D, 2);
+      add(-R, HT, rnd(-D, 1), 2); add(R, HT, rnd(-D, 1), 2);
+      add(-R, 0, rnd(-D, 1), 2); add(R, 0, rnd(-D, 1), 2);
+      add(-R, rnd(0, HT), -D, 2); add(R, rnd(0, HT), -D, 2);
+    }
+    [[-4.6, -2.5], [4.6, -2.5], [-4.6, -6.5], [4.6, -6.5], [-4.6, -10], [4.6, -10]].forEach(function (p) {
+      for (i = 0; i < 260; i++) { a = rnd(0, 6.28); add(p[0] + Math.cos(a) * 0.45, rnd(0, HT), p[1] + Math.sin(a) * 0.45, 3); }
+    });
+    for (i = 0; i < 1400; i++) { a = rnd(0, 6.28); b = Math.sqrt(Math.random()); add(Math.cos(a) * 2.4 * b, 0.7 + 0.12 * Math.sin(a * 3), -6 + Math.sin(a) * 1.6 * b, 3); }
+    for (i = 0; i < 900; i++) { a = rnd(0, 6.28); add(Math.cos(a) * 2.4, rnd(0.7, 0.85), -6 + Math.sin(a) * 1.6, 2); }
+    [[-3.2, -5.5, 1.4], [3.2, -5.5, 1.4], [-3, -9, 1.8], [3, -9, 1.8]].forEach(function (o) {
+      for (i = 0; i < 700; i++) { a = rnd(0, 6.28); b = rnd(0, 1); c = rnd(0, o[2]); add(o[0] + rnd(-0.9, 0.9), c, o[1] + rnd(-0.6, 0.6), 3); }
+    });
+  }
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    if (reduce) frame(t0 + 6500);
+  }
+  function ease(x) { return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2; }
+  var last = t0;
+  function frame(now) {
+    var t = (now - t0) / 1000;
+    var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    boost += (boostTarget - boost) * Math.min(1, dt * 6);
+    var cycle = 18;
+    var k = (t % cycle) / cycle;
+    var form = k < 0.3 ? ease(k / 0.3) : k < 0.85 ? 1 : 1 - ease((k - 0.85) / 0.15);
+    if (reduce) form = 1;
+    mx += (tmx - mx) * 0.04; my += (tmy - my) * 0.04;
+    var yaw = Math.sin(t * 0.12) * 0.08 + mx * 0.16;
+    var pitch = -0.1 + my * 0.08;
+    var cy = Math.cos(yaw), sy = Math.sin(yaw), cp = Math.cos(pitch), sp = Math.sin(pitch);
+    var focal = Math.max(W * 0.62, H * 0.9);
+    var camZ = 6, camY = 1.7;
+    var sweepSpeed = 1.6 + boost * 5;
+    var sweepZ = 2 - ((t * sweepSpeed) % (D + 3));
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx.clearRect(0, 0, W, H);
+    cx.globalCompositeOperation = light ? "source-over" : "lighter";
+    var ox = W * 0.5, oy = H * 0.5;
+    for (var i = 0; i < pts.length; i++) {
+      var p = pts[i];
+      var f = Math.min(1, Math.max(0, (form - p.d * 0.5) / 0.5));
+      var x = p.x + p.sx * (1 - f), y = p.y + p.sy * (1 - f), z = p.z + p.sz * (1 - f);
+      y += Math.sin(t * 0.8 + p.ph) * 0.03;
+      var x1 = x * cy - (z + 5) * sy, z1 = x * sy + (z + 5) * cy - 5;
+      var y1 = y - camY;
+      var y2 = y1 * cp - z1 * sp, z2 = y1 * sp + z1 * cp;
+      var depth = camZ - z2;
+      if (depth < 0.6) continue;
+      var sc = focal / depth;
+      var px = ox + x1 * sc, py = oy - y2 * sc;
+      var ddx = px - cursorX, ddy = py - cursorY, dd = Math.sqrt(ddx * ddx + ddy * ddy), glow = 0;
+      if (dd < 150 && dd > 0.1) { var push = (150 - dd) / 150; px += ddx / dd * push * 38; py += ddy / dd * push * 38; glow = push; }
+      if (px < -10 || px > W + 10 || py < -10 || py > H + 10) continue;
+      var tw = 0.6 + 0.4 * Math.sin(t * 1.6 + p.ph);
+      var near = Math.abs(z - sweepZ);
+      var lit = near < 0.45 ? 1 - near / 0.45 : 0;
+      var a = Math.min(1, (0.3 + 1.2 * f + lit * 1.4 + boost * 0.3 + glow * 1.2) * (11 / depth)) * tw * (light ? 0.8 : 0.7);
+      var r = Math.max(0.7, sc * 0.007) * (1 + lit * 0.7 + glow * 0.6);
+      var hue, sat, lig;
+      if (light) {
+        hue = 158 + (p.k === 1 ? -8 : p.k === 3 ? 6 : 0); sat = 45 + (p.k === 2 ? 10 : 0); lig = lit > 0.05 ? 24 : 34 + (p.k === 1 ? 6 : 0);
+      } else if (lit > 0.05) { hue = 42; sat = 80; lig = 66; }
+      else if (p.k === 2) { hue = 40; sat = 55; lig = 58; }
+      else if (p.k === 3) { hue = 38; sat = 45; lig = 56; }
+      else { hue = 30; sat = 10; lig = 62; }
+      cx.fillStyle = "hsla(" + hue + ", " + sat + "%, " + lig + "%, " + a.toFixed(3) + ")";
+      cx.fillRect(px - r, py - r, r * 2, r * 2);
+    }
+    cx.globalCompositeOperation = "source-over";
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  window.addEventListener("resize", resize);
+  window.addEventListener("pointermove", function (e) { tmx = e.clientX / window.innerWidth - 0.5; tmy = e.clientY / window.innerHeight - 0.5; cursorX = e.clientX; cursorY = e.clientY; });
+  document.addEventListener("pointerover", function (e) { if (e.target.closest && e.target.closest(".btn, .nav a, .scene")) boostTarget = 1; });
+  document.addEventListener("pointerout", function (e) { if (e.target.closest && e.target.closest(".btn, .nav a, .scene")) boostTarget = 0; });
+  build(); resize();
+  if (!reduce) requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
