@@ -15,7 +15,7 @@
   (function () { var g = renderer.getContext(), x = g.getExtension("WEBGL_debug_renderer_info"); if (x) perfGpu = g.getParameter(x.UNMASKED_RENDERER_WEBGL); })();
   if (perfOn) perfEl.hidden = false;
   if (!renderer.capabilities.isWebGL2) { fail("This viewer needs WebGL2."); return; }
-  renderer.setClearColor(0x0b0f0e, 1);
+  renderer.setClearColor(0x181A19, 1);
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(70, 1, 0.05, 200);
   camera.rotation.order = "YXZ";
@@ -30,6 +30,7 @@
   }
   function progress(f, msg) {
     document.getElementById("barfill").style.width = Math.round(f * 100) + "%";
+    document.getElementById("loadpct").textContent = Math.round(f * 100) + "%";
     if (msg) document.getElementById("loadmsg").textContent = msg;
   }
 
@@ -171,7 +172,9 @@
       "postMessage({order:res},[res.buffer]);};";
     worker = new Worker(URL.createObjectURL(new Blob([src], { type: "application/javascript" })));
     worker.onmessage = function (e) {
-      idx.array.set(e.data.order); idx.needsUpdate = true; sortPending = false;
+      sortPending = false;
+      if (e.data.order.length !== Math.min(limit, total)) { lastSortKey = ""; return; }
+      idx.array.set(e.data.order); idx.needsUpdate = true;
       perf.sorts++; perf.sortMs += performance.now() - perf.sortSent;
     };
     worker.postMessage({ pos: pos.buffer }, [pos.buffer]);
@@ -188,7 +191,7 @@
     g.setAttribute("color", new THREE.BufferAttribute(Cc, 3, true));
     g.setIndex(new THREE.BufferAttribute(F, 1));
     surface = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide }));
-    wire = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x5fd0b8, wireframe: true, transparent: true, opacity: 0.35, depthTest: true }));
+    wire = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xD4B068, wireframe: true, transparent: true, opacity: 0.35, depthTest: true }));
     surface.frustumCulled = false; wire.frustumCulled = false; wire.renderOrder = 2; surface.renderOrder = 1;
     scene.add(surface); scene.add(wire);
   }
@@ -256,13 +259,76 @@
   function buildGridOverlay() {
     var walkable = new Uint8Array(grid.blocked.length);
     for (var i = 0; i < walkable.length; i++) walkable[i] = grid.blocked[i] ? 0 : 1;
-    gridFloor = tileLayer(walkable, 0x5fd0b8, 0.09, 0.01);
-    gridBlocked = edgeLayer(grid.blocked, 0x5fd0b8, 0.14, 0.3);
-    gridOccupied = edgeLayer(grid.occupied, 0xf0b255, 0.22, 0.5);
+    gridFloor = tileLayer(walkable, 0xD4B068, 0.09, 0.01);
+    gridBlocked = edgeLayer(grid.blocked, 0xD4B068, 0.14, 0.3);
+    gridOccupied = edgeLayer(grid.occupied, 0xC8643C, 0.22, 0.5);
     scene.add(gridFloor); scene.add(gridBlocked); scene.add(gridOccupied);
   }
 
+  var miniPanel = document.getElementById("minimap"), miniCanvas = document.getElementById("minimapCanvas"), miniCtx = miniCanvas.getContext("2d"), mini = null;
+
+  function buildMinimap() {
+    var minC = grid.cols, maxC = -1, minR = grid.rows, maxR = -1, pad = 3;
+    for (var r = 0; r < grid.rows; r++) {
+      for (var c = 0; c < grid.cols; c++) {
+        if (grid.blocked[r * grid.cols + c]) continue;
+        if (c < minC) minC = c; if (c > maxC) maxC = c; if (r < minR) minR = r; if (r > maxR) maxR = r;
+      }
+    }
+    minC = Math.max(0, minC - pad); minR = Math.max(0, minR - pad); maxC = Math.min(grid.cols - 1, maxC + pad); maxR = Math.min(grid.rows - 1, maxR + pad);
+    var w = maxC - minC + 1, h = maxR - minR + 1, size = miniCanvas.width, scale = Math.min(size / w, size / h);
+    var offX = (size - w * scale) / 2, offY = (size - h * scale) / 2;
+    var base = document.createElement("canvas"); base.width = size; base.height = size;
+    var b = base.getContext("2d");
+    for (var rr = minR; rr <= maxR; rr++) {
+      for (var cc = minC; cc <= maxC; cc++) {
+        var i = rr * grid.cols + cc, x = offX + (cc - minC) * scale, y = offY + (rr - minR) * scale;
+        if (!grid.blocked[i]) b.fillStyle = "rgba(212, 176, 104, 0.45)";
+        else if (grid.occupied[i]) b.fillStyle = "rgba(200, 100, 60, 0.26)";
+        else b.fillStyle = "rgba(150, 160, 230, 0.07)";
+        b.fillRect(x, y, Math.ceil(scale), Math.ceil(scale));
+      }
+    }
+    mini = { base: base, minC: minC, minR: minR, scale: scale, offX: offX, offY: offY, size: size };
+    miniPanel.hidden = false;
+  }
+
+  function drawMinimap() {
+    if (!mini || miniPanel.hidden) return;
+    var px = mini.offX + ((camera.position.x - grid.ox) / grid.cell - mini.minC) * mini.scale;
+    var py = mini.offY + ((camera.position.z - grid.oz) / grid.cell - mini.minR) * mini.scale;
+    var heading = Math.atan2(-Math.cos(yaw), -Math.sin(yaw));
+    var half = Math.atan(Math.tan(camera.fov * Math.PI / 360) * camera.aspect), reach = mini.size * 0.24;
+    miniCtx.clearRect(0, 0, mini.size, mini.size);
+    miniCtx.drawImage(mini.base, 0, 0);
+    var cone = miniCtx.createRadialGradient(px, py, 0, px, py, reach);
+    cone.addColorStop(0, "rgba(255, 255, 255, 0.7)"); cone.addColorStop(1, "rgba(255, 255, 255, 0)");
+    miniCtx.fillStyle = cone;
+    miniCtx.beginPath(); miniCtx.moveTo(px, py); miniCtx.arc(px, py, reach, heading - half, heading + half); miniCtx.closePath(); miniCtx.fill();
+    miniCtx.beginPath(); miniCtx.arc(px, py, mini.size * 0.022, 0, Math.PI * 2);
+    miniCtx.fillStyle = "#ffffff"; miniCtx.fill();
+    miniCtx.lineWidth = mini.size * 0.012; miniCtx.strokeStyle = "#B8944A"; miniCtx.stroke();
+  }
+
+  var guide = document.getElementById("guide");
+  function guideSeen() {
+    try { return localStorage.getItem("namma_guide_seen") === "1"; } catch (e) { return false; }
+  }
+  function openGuide() {
+    guide.hidden = false;
+    if (document.pointerLockElement) document.exitPointerLock();
+    document.getElementById("guideGo").focus();
+  }
+  function closeGuide() {
+    guide.hidden = true;
+    try { localStorage.setItem("namma_guide_seen", "1"); } catch (e) { }
+    canvas.focus();
+  }
+  document.getElementById("guideGo").addEventListener("click", closeGuide);
+  document.getElementById("guideBtn").addEventListener("click", openGuide);
+
   function applyMode() {
+    if (mode === "mesh" && !surface) mode = "splat";
     if (splatMesh) splatMesh.visible = mode === "splat";
     if (surface) surface.visible = mode === "mesh";
     if (wire) wire.visible = debugOn;
@@ -293,7 +359,9 @@
   var keys = {};
   function held(a, b) { return keys[a] || (b && keys[b]); }
   window.addEventListener("keydown", function (e) {
+    if (!guide.hidden) { if (e.code === "Enter" || e.code === "Escape") closeGuide(); return; }
     keys[e.code] = true;
+    if (e.code === "KeyN" && mini) miniPanel.hidden = !miniPanel.hidden;
     if (e.code === "Digit1") setMode("splat");
     if (e.code === "Digit2") setMode("mesh");
     if (e.code === "KeyM") toggleDebug();
@@ -320,8 +388,9 @@
     locked = document.pointerLockElement === canvas; canvas.classList.toggle("locked", locked); hint.hidden = locked;
   });
 
+  var renderScale = 1;
   function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.25) * renderScale;
     renderer.setPixelRatio(dpr); renderer.setSize(window.innerWidth, window.innerHeight, false);
     camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
   }
@@ -372,6 +441,7 @@
       if (!sortPending && key !== lastSortKey) { sortPending = true; lastSortKey = key; perf.sortSent = performance.now(); worker.postMessage({ row: [e[2], e[6], e[10], e[14]], lim: limit }); }
     }
     renderer.render(scene, camera);
+    drawMinimap();
     frames++;
     if (now - fpsT > 500) {
       document.getElementById("fps").textContent = Math.round(frames * 1000 / (now - fpsT));
@@ -393,12 +463,48 @@
     stepWalk: stepWalk,
     isBlocked: isBlocked,
     setDetail: setDetail,
+    setScale: function (k) { renderScale = k; resize(); },
     grid: function () { return grid; },
     pose: function () { return { x: camera.position.x, y: camera.position.y, z: camera.position.z, yaw: yaw, pitch: pitch }; },
     setPose: function (x, z, newYaw) { camera.position.x = x; camera.position.z = z; yaw = newYaw; },
     look: function (dx, dy) { yaw -= dx * 0.0032; pitch = Math.max(-PITCH_LIMIT, Math.min(PITCH_LIMIT, pitch - dy * 0.0032)); },
     reset: resetToDoor
   };
+
+  var tuneCancelled = false, tuneTimer = 0;
+  function measureFps(ms, done) {
+    var n = 0, t0 = 0;
+    function step(t) {
+      if (!t0) t0 = t;
+      n++;
+      if (t - t0 >= ms) done(n * 1000 / (t - t0)); else requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+  function showTune(message) {
+    var el = document.createElement("div");
+    el.className = "panel"; el.style.cssText = "left:50%;bottom:128px;transform:translateX(-50%);max-width:min(560px,calc(100vw - 32px));z-index:4;font-size:13px;text-align:center;pointer-events:none";
+    el.textContent = message; document.body.appendChild(el);
+    setTimeout(function () { el.remove(); }, 9000);
+  }
+  function scheduleAutoTune() {
+    if (q.get("detail") || q.get("auto") === "0") return;
+    var ladder = [[500000, 0.75], [250000, 0.75], [250000, 0.6]], rung = 0;
+    Array.prototype.forEach.call(document.querySelectorAll("#detail button"), function (b) { b.addEventListener("click", function () { tuneCancelled = true; }); });
+    function round() {
+      if (tuneCancelled) return;
+      if (document.hidden) { tuneTimer = setTimeout(round, 1500); return; }
+      measureFps(1500, function (fps) {
+        if (tuneCancelled || document.hidden || fps >= 35 || rung >= ladder.length) return;
+        var step = ladder[rung++];
+        if (step[0] < limit) setDetail(step[0]);
+        renderScale = step[1]; resize();
+        showTune("Slow graphics detected, so quality was lowered (" + Math.round(limit / 1000) + "k splats, " + Math.round(step[1] * 100) + "% resolution) for smoother movement. Use the Detail buttons to change it. Choosing the high-performance GPU in your system graphics settings fixes this properly.");
+        tuneTimer = setTimeout(round, 1500);
+      });
+    }
+    tuneTimer = setTimeout(round, 2500);
+  }
 
   var manifest = null;
   fetchBuf(ASSETS + "manifest.json").then(function (mb) {
@@ -417,10 +523,13 @@
   }).then(function (mb) {
     if (mb) buildMesh(mb); else document.querySelector('[data-mode="mesh"]').hidden = true;
     buildGridOverlay();
+    buildMinimap();
     var detail = parseInt(q.get("detail") || "0", 10);
     if (detail) setDetail(detail);
     applyMode(); progress(1, "Ready");
     document.getElementById("loading").hidden = true; window.__ready = true;
+    if (!guideSeen() && q.get("guide") !== "0") openGuide();
+    scheduleAutoTune();
     requestAnimationFrame(tick);
   }).catch(function (e) { fail(String(e && e.message || e)); });
 })();
