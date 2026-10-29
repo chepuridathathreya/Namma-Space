@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capture SOP | NammaSpace</title>
+<meta name="description" content="How we film an indoor space so it can be rebuilt as a walkable 3D scene: settings, walk, extra photos, checks and known failure cases.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="top"><div class="in">
+<a class="site" href="../index.html">NammaSpace</a>
+<div class="tabs"><a href="../index.html">Project</a><a href="../report/index.html">Report</a><a href="../sop/index.html" class="on">SOP</a><a href="../results/index.html">Results</a><a href="../roadmap/index.html">Roadmap</a></div>
+</div></div>
+<div class="page">
+<h1>NammaSpace capture SOP</h1>
+<p>Standard operating procedure for filming an indoor space so that it can be rebuilt as a walkable 3D scene. It is written from what we actually did for the Room scene, which gave our best result, and from what went wrong in earlier captures. It does not describe a method we did not use.</p>
+<h2 id="s1">1. Scope</h2>
+<ul><li>One indoor space, such as a room, a hallway or a bedroom, captured with one phone.</li><li>One video is one scene. Scenes are never merged.</li><li>Output of this procedure: a handheld video plus a small set of still photos, both taken by the same person with the same camera settings.</li></ul>
+<h2 id="s2">2. Equipment and settings</h2>
+<p>What was used for the Room scene (best result):</p>
+<div class="wrap"><table><tr><th>Item</th><th>Setting</th></tr><tr><td>Phone</td><td>POCO X6</td></tr><tr><td>Mode</td><td>Pro (manual) mode, for both video and photos</td></tr><tr><td>Lens</td><td>0.6x ultra-wide camera. The ultra-wide lens covers more of each wall in a small space</td></tr><tr><td>Focus</td><td>Manual, not automatic</td></tr><tr><td>Shutter speed</td><td>1/100 s</td></tr><tr><td>ISO</td><td>800</td></tr><tr><td>White balance</td><td>5000 K, fixed</td></tr><tr><td>Exposure compensation (EV)</td><td>0</td></tr><tr><td>Video</td><td>1920 x 1080, 30 frames per second</td></tr><tr><td>Orientation</td><td>Landscape</td></tr></table></div>
+<p>Photos used the same Pro mode, the same 0.6x lens, the same orientation and the same aspect ratio as the video, so that the video frames and the photos share one camera model.</p>
+<p>Why fixed settings matter: automatic exposure and white balance make the same wall change brightness from frame to frame, which makes matching frames harder and gives the trained splat visible brightness jumps.</p>
+<p>Rule: choose the lens once and use it for the whole capture, video and photos together. Do not switch lenses partway through.</p>
+<h2 id="s3">3. Before filming</h2>
+<ul><li>Aim for even lighting, and close curtains if sunlight makes bright patches on the floor or walls. Our Room capture did not have consistent lighting (see section 9).</li><li>Keep people and pets out of the space. Moving things leave ghosts in the splat.</li><li>Wipe the lens.</li><li>Cover mirrors. In the Room we covered the mirror with a towel so that it would not create a ghost reflection.</li><li>Plain white walls and ceilings, glass and glossy floors are hard cases. See section 7.</li></ul>
+<h2 id="s4">4. The video walk</h2>
+<ol><li>Hold the phone at chest or eye height, in landscape, tilted slightly down.</li><li>Walk <b>one continuous lap</b>, slowly, at about half a metre per second.</li><li>Turn slowly. Avoid fast pans, and do not stand still.</li><li>Finish where you started.</li><li>If you want the ceiling in the same walk, tilt up slowly during the lap, sweep along each wall with overlap, then tilt back down.</li><li><b>Do not walk a second lap at another height or angle.</b> In our first hallway capture a second lap with the phone raised toward the ceiling made the same wall appear in two places, which gave bent doors and a double window.</li></ol>
+<p>The Room video was 8,806 frames (about 4 minutes 53 seconds at 30 frames per second).</p>
+<h2 id="s5">5. Extra photos for corners and ceiling</h2>
+<p>A walk shows corners and the top of the walls only briefly. To cover them we took still photos after the video, from the same eye height as the walk:</p>
+<ul><li>Camera at eye level, in landscape, same lens (0.6x) and same Pro settings as the video.</li><li>Tilt <b>up</b> for ceiling views, tilt <b>down</b> when standing at a corner.</li><li>Go to every corner and take <b>three to four photos</b> per corner, a small step apart.</li><li>Each photo should show things the video also shows, so that it can be matched to the video frames.</li></ul>
+<p>For the Room we used 26 photos. All 26 were registered by COLMAP.</p>
+<p>The photos go in <code>namma_pipeline/1b_PUT_EXTRA_PHOTOS_HERE/</code>. The pipeline adds them to the frame set automatically. Empty that folder after each run, or the next scene will pick them up.</p>
+<h2 id="s6">6. Checks before and after processing</h2>
+<p>The pipeline performs these checks and stops if one fails:</p>
+<ul><li><b>Colour check.</b> The extracted frames must have real colour. This exists because a bug once produced grey frames.</li><li><b>Sharpest-frame selection.</b> The video is cut into 0.5 s windows and the sharpest frame of each window is kept. A window with no frame above the sharpness threshold is reported. For the Room, 587 frames were picked and no window was left out.</li><li><b>Alignment check.</b> Extracted frames must match the frames that were scored.</li><li><b>Camera model health check.</b> The best COLMAP model must place almost every frame. Room: 613 of 613 frames placed (587 video frames and 26 photos), 135,780 points.</li></ul>
+<p>Visual checks you can do yourself:</p>
+<ul><li>Open the sparse reconstruction and confirm the camera path is one clean loop and the walls are single, not doubled.</li><li>Walk the result in the viewer and look for bent doors, doubled windows and floating blobs.</li></ul>
+<h2 id="s7">7. Known failure cases</h2>
+<div class="wrap"><table><tr><th>Problem</th><th>What it looked like</th><th>Cause</th><th>What to do</th></tr><tr><td>Second lap at another angle</td><td>Doubled walls, bent doors</td><td>Same wall placed twice</td><td>One lap, one height</td></tr><tr><td>Plain white ceiling not filmed</td><td>Black ceiling in the Early Bedroom</td><td>Too few features for COLMAP, and not captured</td><td>Tilt up slowly during the walk and add ceiling photos</td></tr><tr><td>Glossy floor, wardrobes, mirrors</td><td>Ghost copies below the floor</td><td>The splat copies a reflection as a second object</td><td>Cover mirrors, as we did with a towel in the Room; the pipeline also removes ghosts under the floor</td></tr><tr><td>Fast or broken walk</td><td>Fewer frames placed</td><td>COLMAP loses the path</td><td>Slow, continuous walk</td></tr><tr><td>Ceilings and corners seen briefly</td><td>Rough or dark areas</td><td>Barely covered</td><td>Extra photos as in section 5</td></tr></table></div>
+<h2 id="s8">8. What this procedure produced</h2>
+<div class="wrap"><table><tr><th>Scene</th><th>Frames</th><th>Held-out PSNR</th><th>SSIM</th><th>LPIPS</th></tr><tr><td>Room (this SOP)</td><td>613</td><td>27.14 dB</td><td>0.913</td><td>0.191</td></tr><tr><td>Hallway and Bedroom v2</td><td>868</td><td>26.46 dB</td><td>0.874</td><td>0.244</td></tr></table></div>
+<p>The Room is a different scene from the hallway, so these scores show progress in the method, not a controlled comparison. We have not run an experiment that isolates the effect of the extra photos.</p>
+<h2 id="s9">9. Not recorded and not yet tested</h2>
+<ul><li><b>Lighting:</b> not controlled and not consistent across the Room capture, and not measured.</li><li><b>Frame rate and resolution:</b> 1080p at 30 fps was used. A 4K re-capture for sharper frames is still open.</li><li><b>Capture time:</b> roughly 8 to 10 minutes for the video and the photos together, estimated and not timed.</li></ul>
+</div>
+<div class="foot">NammaSpace &middot; Matrix &middot; IIT Techfest 2026 &middot; <a href="https://namma-space.pages.dev/">live demo</a> &middot; <a href="https://github.com/chepuridathathreya/Namma-Space">code</a></div>
+<script src="../scroll.js"></script>
+</body>
+</html>
