@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NammaSpace</title>
+<meta name="description" content="Project page for NammaSpace: a single phone video becomes a 3D Gaussian splat with collision that can be walked through in a web browser.">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="icons_test1.css">
+</head>
+<body>
+<div class="top"><div class="in">
+<a class="site" href="index.html">NammaSpace</a>
+<div class="tabs"><a href="index.html" class="on">Project</a><a href="report/index.html">Report</a><a href="results/index.html">Results</a><a href="roadmap/index.html">Roadmap</a></div>
+</div></div>
+<div class="page">
+<h1>NammaSpace: Walkable Digital Twins of Indoor Spaces from a Single Phone Video</h1>
+<p class="authors">Matrix <span class="sep">|</span> <a href="https://github.com/chepuridathathreya">Chepuri Dathatreya</a></p>
+<p class="small">IIT Techfest 2026, NammaSpace challenge</p>
+<ul class="links">
+<li><a href="report/index.html"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 3h11l6 6v20H8z"/><path d="M19 3v6h6M12 15h9M12 19h9M12 23h6"/></svg>Report</a></li>
+<li><a href="#live-demo"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="6" width="26" height="18" rx="2"/><path d="M11 28h10M16 24v4"/><path d="M13 11l7 4-7 4z"/></svg>Live demo</a></li>
+<li><a href="#demo-video"><svg viewBox="0 0 32 32" aria-hidden="true"><rect x="3" y="7" width="26" height="18" rx="3"/><path d="M13 12l7 4-7 4z"/></svg>Video</a></li>
+<li class="gh"><a href="https://github.com/chepuridathathreya/Namma-Space"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Code</a></li>
+</ul>
+<p>NammaSpace rebuilds a real indoor space from one handheld phone video and lets a person walk through it in an ordinary web browser. The video is turned into a 3D Gaussian splat, a set of about half a million soft, coloured, translucent 3D Gaussians fitted to the real frames, so the room keeps its real colour, reflections and soft edges. A splat is not solid, so the system also builds a separate 10 cm collision grid from the scan itself, which stops the viewer at walls and furniture.</p>
+<p>The pipeline picks the sharpest frame in every half second, recovers camera poses with COLMAP, fixes the floor and metric scale from the camera path, trains the splat with nerfstudio, then aligns, cleans and compresses it to a file of about 8 MB that a WebGL2 viewer streams and draws. On the Room scene (613 frames) it reaches a held-out PSNR of 27.14 dB, SSIM 0.913 and LPIPS 0.191 after 14 minutes of training on one GPU. The limits are stated plainly in the <a href="roadmap/index.html">roadmap</a>.</p>
+
+<h2 id="demo-video">Demo video</h2>
+<video class="demo" controls preload="metadata" poster="video/namma_demo_poster.jpg" width="1280" height="720"><source src="video/namma_demo.mp4" type="video/mp4"><track kind="captions" src="video/namma_demo_captions.vtt" srclang="en" label="English"></video>
+<p class="small">Two minutes, from one phone video to walking through the room in a browser. Every viewer shot is a real screen recording.</p>
+
+<h2 id="colmap">Camera path and sparse reconstruction</h2>
+<figure><img src="img/hero_sparse.jpg" width="1400" height="640" alt="Two sparse COLMAP reconstructions of indoor spaces with the camera path in red"><figcaption>Sparse COLMAP reconstructions with the camera path in red: the Room (left) and a longer hallway and bedroom capture, v3 (right). Ceiling points are removed so the interior is visible.</figcaption></figure>
+<hr class="rule">
+<div class="grid">
+<figure><video class="demo" autoplay loop muted playsinline preload="auto" disablepictureinpicture width="1280" height="720"><source src="video/colmap_orbit_01.mp4" type="video/mp4"></video><figcaption>Room, sparse COLMAP point cloud, orbit 1</figcaption></figure>
+<figure><video class="demo" autoplay loop muted playsinline preload="auto" disablepictureinpicture width="1280" height="720"><source src="video/colmap_orbit_02.mp4" type="video/mp4"></video><figcaption>Room, sparse COLMAP point cloud, orbit 2</figcaption></figure>
+</div>
+
+<h2 id="live-demo">Live demo</h2>
+<div class="livewrap"><iframe class="live" src="https://namma-space.pages.dev/room/?embed=1&amp;guide=0" title="NammaSpace live viewer, Room scene" loading="lazy" allow="fullscreen"></iframe></div>
+<p class="small">The Room scene running in your browser. Click inside the scene, then use W A S D to walk, Shift to run, Space to jump and Esc to free the mouse. Use the &#x26F6; button in the corner of the viewer for full screen. <a href="https://namma-space.pages.dev/room/">Open it full screen</a>, or try the <a href="https://namma-space.pages.dev/hallway/">Hallway and Bedroom</a> and the <a href="https://namma-space.pages.dev/bedroom/">Early Bedroom</a>.</p>
+
+<h2>Reconstructions</h2>
+<div class="grid">
+<figure><img src="img/room_splat.jpg" width="1280" height="720" alt="Room rendered from the Gaussian splat" loading="lazy"><figcaption>Room, Gaussian splat render</figcaption></figure>
+<figure><img src="img/hallway_splat.jpg" width="1280" height="720" alt="Hallway and bedroom rendered from the Gaussian splat" loading="lazy"><figcaption>Hallway and Bedroom (v2), Gaussian splat render</figcaption></figure>
+<figure><img class="map" src="img/room_map.png" width="852" height="782" alt="Room collision grid" loading="lazy"><figcaption>Room, collision grid: walkable (green), obstacle (orange), blocked margin (grey)</figcaption></figure>
+<figure><img class="map" src="img/hallway_map.png" width="1286" height="1076" alt="Hallway and bedroom collision grid" loading="lazy"><figcaption>Hallway and Bedroom (v2), collision grid</figcaption></figure>
+</div>
+<p>More views, the evaluation table, frame-rate measurements and the full list of experiments, including the ones that went wrong, are on the <a href="results/index.html">results</a> page.</p>
+
+<h2>Method overview</h2>
+<div class="diagram box" style="padding:10px">
+<svg viewBox="0 0 800 180" role="img" aria-label="Pipeline: phone video, frames and COLMAP, 3D Gaussian training, align and clean, web viewer">
+<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#444"/></marker></defs>
+<g font-family="Segoe UI, Arial, sans-serif" font-size="14" text-anchor="middle">
+<g fill="#fff" stroke="#555" stroke-width="1.2"><rect x="8" y="26" width="136" height="72"/><rect x="170" y="26" width="136" height="72"/><rect x="332" y="26" width="136" height="72"/><rect x="494" y="26" width="136" height="72"/><rect x="656" y="26" width="136" height="72"/></g>
+<g fill="#212529"><text x="76" y="58">Phone video</text><text x="238" y="58">Frames + COLMAP</text><text x="400" y="58">3D Gaussian training</text><text x="562" y="58">Align + clean</text><text x="724" y="58">Web viewer</text></g>
+<g fill="#666" font-size="12"><text x="76" y="78">one slow walk</text><text x="238" y="78">poses, floor, scale</text><text x="400" y="78">splatfacto, 30k steps</text><text x="562" y="78">sort, compress</text><text x="724" y="78">WebGL2 + collision</text></g>
+<g stroke="#444" stroke-width="1.4" marker-end="url(#a)"><path d="M146 62H166"/><path d="M308 62H328"/><path d="M470 62H490"/><path d="M632 62H652"/></g>
+<g fill="#444" font-family="Consolas, monospace" font-size="11"><text x="76" y="122">video.mp4</text><text x="238" y="122">cameras, points, grid</text><text x="400" y="122">splat.ply</text><text x="562" y="122">scene.qsplat, 8 MB</text><text x="724" y="122">site/</text></g>
+<g fill="#666" font-size="12"><text x="238" y="148">laptop CPU, about 21 min</text><text x="400" y="148">GPU, about 14 min</text><text x="562" y="148">CPU, about 15 s</text></g>
+</g></svg></div>
+<p style="margin-top:12px">Frames are chosen by sharpness, COLMAP solves a camera pose for each, and the camera path fixes the floor plane and a metric scale from an assumed phone height of 1.4 m. nerfstudio's splatfacto fits the Gaussians to the frames. The result is moved back into the metric world frame, cleaned of reflections that appear below the floor, sorted so the most important Gaussians come first, and compressed. The splat itself is a second, independent source of evidence, and it is combined with the camera-path map to produce the collision grid. Every step is described in the <a href="report/index.html">technical report</a>.</p>
+
+<h2>Ongoing work</h2>
+<p>The next stage is <b>points of interest (POIs)</b>: named places in a scene, such as a door, a bed or a window, placed on the same collision grid the live map already reads, together with a navigation method so a viewer can pick a place and be guided to it. We are also looking at an AI model to make reconstruction faster and more robust, a way to fill the areas the camera never saw, and an augmented reality view. Details are on the <a href="roadmap/index.html">roadmap</a> page.</p>
+
+</div>
+<div class="foot">NammaSpace &middot; IIT Techfest 2026 &middot; <a href="https://namma-space.pages.dev/">live demo</a> &middot; <a href="https://github.com/chepuridathathreya/Namma-Space">code</a></div>
+<script src="scroll.js"></script>
+</body>
+</html>

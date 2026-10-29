@@ -2,7 +2,9 @@
 
 Walk through a real room in your browser, built from one phone video.
 
-NammaSpace turns a walkthrough video into a 3D Gaussian splat and publishes it as a web page where you move with W A S D. Walls and furniture block you, so you can judge a space before you visit it. Built for IIT Techfest 2026.
+NammaSpace turns a walkthrough video into a 3D Gaussian splat and publishes it as a web page where you move with W A S D. Walls and furniture block you, so you can judge a space before you visit it. Built by Matrix (Chepuri Dathatreya) for IIT Techfest 2026.
+
+**Live viewer:** https://namma-space.pages.dev/ | **Project page, report and demo video:** https://namma-space-documentation.pages.dev/
 
 ## Live demo
 
@@ -173,7 +175,9 @@ Scores are measured on frames held out from training. Settings and timings: [`01
 - Ceilings and areas the camera barely saw are rough or dark.
 - Collision is a 2D floor grid. It stops you at walls and furniture but does not model stairs or overhangs.
 - Scale assumes a fixed phone height, not a measured reference.
-- Points of interest and A* route finding are not built yet.
+- Points of interest and navigation between them are not built yet. The plan is on the [roadmap](https://namma-space-documentation.pages.dev/roadmap/).
+
+The full list of problems we met and how we handled them is in section 10 of the [technical report](https://namma-space-documentation.pages.dev/report/).
 
 ## Repository layout
 
@@ -186,6 +190,7 @@ test/                  sample scene for run_all.py --test
 02_hallway_bedroom/    second scene, site/
 03_bedroom_early/      first scene, site/
 home/                  the project overview page
+documentation_site/    project page, technical report, results and roadmap (demo videos are served from the deployed site)
 deploy/                publishes all scenes as one Cloudflare Pages site
 namma_pipeline/
   scripts/             pipeline code (frames, COLMAP, collision, splat cleanup, compression)

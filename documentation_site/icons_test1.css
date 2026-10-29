@@ -1,0 +1,13 @@
+.links li { position: relative; }
+.links a { position: relative; padding: 6px 8px 4px; border-radius: 12px; transition: transform .25s cubic-bezier(.2,.8,.2,1), background .25s, box-shadow .25s; overflow: hidden; }
+.links a::before { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.9) 50%, transparent 70%); transform: translateX(-120%); pointer-events: none; }
+.links a:hover { text-decoration: none; transform: translateY(-4px) scale(1.06); background: radial-gradient(circle at 50% 30%, #eef4ff, #f8f0ff 70%); box-shadow: 0 8px 20px rgba(80,90,200,.22), 0 0 0 1px rgba(140,150,230,.35); }
+.links a:hover::before { transform: translateX(120%); transition: transform .7s ease; }
+.links a:active { transform: translateY(-1px) scale(.98); }
+.links a svg { transition: transform .35s cubic-bezier(.2,.8,.2,1), stroke .25s, fill .25s, filter .25s; }
+.links a:hover svg { transform: rotate(-8deg) scale(1.15); stroke: #4a55d8; filter: drop-shadow(0 0 6px rgba(120,130,255,.7)); }
+.links .gh svg { fill: #444; stroke: none; }
+.links .gh a:hover svg { fill: #4a55d8; stroke: none; }
+.links a::after { content: "\2726"; position: absolute; top: 4px; right: 8px; font-size: 12px; color: #8a7cff; opacity: 0; transform: scale(.2) rotate(0); transition: opacity .3s, transform .4s; }
+.links a:hover::after { opacity: 1; transform: scale(1) rotate(90deg); }
+@media (prefers-reduced-motion: reduce) { .links a, .links a svg, .links a::before, .links a::after { transition: none; } }

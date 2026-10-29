@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Results | NammaSpace</title>
+<meta name="description" content="Evaluation, frame rate and collision grids for the NammaSpace scenes.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="top"><div class="in">
+<a class="site" href="../index.html">NammaSpace</a>
+<div class="tabs"><a href="../index.html">Project</a><a href="../report/index.html">Report</a><a href="../results/index.html" class="on">Results</a><a href="../roadmap/index.html">Roadmap</a></div>
+</div></div>
+<div class="page">
+<h1>Results</h1>
+<p>Quality is scored on frames the model never saw during training. Figures come from each scene's training report in the repository.</p>
+<h2>Evaluation</h2>
+<div class="wrap"><table>
+<tr><th>Scene</th><th>Frames</th><th>Gaussians</th><th>PSNR</th><th>SSIM</th><th>LPIPS</th><th>Training</th><th>Walkable floor</th></tr>
+<tr><td>Room</td><td class="n">613</td><td class="n">541,337</td><td class="n"><b>27.14 dB</b></td><td class="n"><b>0.913</b></td><td class="n"><b>0.191</b></td><td class="n">819 s</td><td class="n">4.3 m&sup2;</td></tr>
+<tr><td>Hallway and Bedroom (v2)</td><td class="n">868</td><td class="n">650,654</td><td class="n">26.46 dB</td><td class="n">0.874</td><td class="n">0.244</td><td class="n">995 s</td><td class="n">15.8 m&sup2;</td></tr>
+<tr><td>Early Bedroom</td><td class="n">not recorded</td><td class="n">700,000 shown</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">&ndash;</td><td class="n">8.1 m&sup2;</td></tr>
+</table></div>
+<p class="small">PSNR and SSIM: higher is better. LPIPS: lower is better. Scores are measured on frames held out from training. The walkable floor is the area your body centre can reach after the 25 cm margin, so it is smaller than the room. The Early Bedroom predates our evaluation step, so no held-out figures exist for it.</p>
+<p>Training used one NVIDIA RTX PRO 6000 Blackwell GPU. Peak memory was about 16 GB for the Room, measured over the whole card. Within the hallway family, a first run scored 23.56 dB with 709 frames and the improved run 26.46 dB with 868 frames. The Room is a different scene, so that comparison shows pipeline progress rather than a like-for-like gain.</p>
+
+<h2>Frame rate in the browser</h2>
+<p>On a laptop with both an integrated and a discrete GPU the browser may run on the integrated one. With all splats drawn we measured 24 to 38 fps on the integrated GPU and 170 to 180 fps on the RTX 3060 laptop GPU. A web page cannot choose the GPU, so the viewer measures its frame rate about 2.5 seconds after loading and, below 35 fps, steps down to fewer splats and a lower render resolution and says so.</p>
+
+<h2>The viewer</h2>
+<figure><img src="../img/viewer_ui.jpg" width="1280" height="720" alt="The viewer with the live map and the controls bar" loading="lazy"><figcaption>The viewer in the Room scene: first-person walking with grid collision, a live map drawn from the collision grid at the bottom left, and the controls bar.</figcaption></figure>
+<p>Try it: <a href="https://namma-space.pages.dev/room/">Room</a>, <a href="https://namma-space.pages.dev/hallway/">Hallway and Bedroom</a>, <a href="https://namma-space.pages.dev/bedroom/">Early Bedroom</a>.</p>
+
+<h2>Collision grids</h2>
+<div class="grid">
+<figure><img class="map" src="../img/room_map.png" width="852" height="782" alt="Room collision grid" loading="lazy"><figcaption>Room, 430 walkable cells (published before the splat-obstacle rule, which removes 17 cells)</figcaption></figure>
+<figure><img class="map" src="../img/hallway_map.png" width="1286" height="1076" alt="Hallway and bedroom collision grid" loading="lazy"><figcaption>Hallway and Bedroom (v2), 1,576 walkable cells. The blue dot is the start.</figcaption></figure>
+</div>
+<p class="small">Cells are 10 cm. Green is walkable, orange an obstacle and grey the blocked margin around obstacles.</p>
+
+<h2 id="experiments">Experiments so far</h2>
+<p>The scenes on the site are a progression of captures, and each one changed the pipeline. This is the full list, including the ones that went wrong.</p>
+<div class="wrap"><table>
+<tr><th>Experiment</th><th>What it was</th><th>Outcome</th><th>What we changed</th></tr>
+<tr><td>Teddy test</td><td>Colab, 18 images, 1,930 points, 2,000 training steps</td><td>Flat and distorted</td><td>Use many sharp, overlapping frames and 15,000 or more steps</td></tr>
+<tr><td>Early Bedroom</td><td>one calm eye-level lap, 359 frames, all placed, 134,897 points, trained on the remote GPU PC, mesh from Poisson reconstruction</td><td>Worked, ceiling black. Live at <a href="https://namma-space.pages.dev/bedroom/">/bedroom/</a></td><td>First end-to-end success and the baseline for later scenes</td></tr>
+<tr><td>Hallway and bedroom, first attempts</td><td>laptop-only pipeline; an early run scored 23.56 dB on 709 frames</td><td>Several faults: frames saved as grey, a fake splat built from raw COLMAP points, two scenes merged on one website, a training crash blamed on the GPU driver that was really the laptop running out of RAM, a downscale folder that did nothing, a wrong <code>.qsplat</code> header, and a second lap at a different angle that doubled walls</td><td>Colour check at the start of both steps, training only on the remote GPU, one video is one scene is one website, real half-size images, a fixed encoder, and the rule of one lap at one height</td></tr>
+<tr><td>Hallway and Bedroom, v2</td><td>868 colour frames, 30,000 steps, 995 s</td><td>26.46 dB, SSIM 0.874, LPIPS 0.244. Hallway strong, bedroom end rougher. Live at <a href="https://namma-space.pages.dev/hallway/">/hallway/</a></td><td>Showed that the fixed pipeline works on a longer capture</td></tr>
+<tr><td>Room, v1</td><td>613 frames chosen by the sharpest-frame picker, 30,000 steps, 819 s</td><td>27.14 dB, SSIM 0.913, LPIPS 0.191, our best scene. Live at <a href="https://namma-space.pages.dev/room/">/room/</a></td><td>The sharpest-frame picker became the default</td></tr>
+<tr><td>Hallway and Bedroom, v3</td><td>4K capture on 25 October, 706 frames placed, COLMAP about 26 minutes, trained on the remote GPU PC</td><td>No held-out score recorded yet and not published on the site</td><td>A separate ceiling pass was filmed but is kept as its own experiment and is not merged yet</td></tr>
+</table></div>
+<p class="small">Held-out scores are in the table above. v3 is listed so the record is complete; we do not claim it is better or worse than v2.</p>
+
+</div>
+<div class="foot">NammaSpace &middot; IIT Techfest 2026 &middot; <a href="https://namma-space.pages.dev/">live demo</a> &middot; <a href="https://github.com/chepuridathathreya/Namma-Space">code</a></div>
+<script src="../scroll.js"></script>
+</body>
+</html>

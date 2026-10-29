@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roadmap | NammaSpace</title>
+<meta name="description" content="Points of interest, navigation, AI-assisted reconstruction, AR and open items for NammaSpace.">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<div class="top"><div class="in">
+<a class="site" href="../index.html">NammaSpace</a>
+<div class="tabs"><a href="../index.html">Project</a><a href="../report/index.html">Report</a><a href="../results/index.html">Results</a><a href="../roadmap/index.html" class="on">Roadmap</a></div>
+</div></div>
+<div class="page">
+<h1>Roadmap</h1>
+<h2>Points of interest</h2>
+<p>A point of interest (POI) is a named place in a scene: a door, a window, a bed, a wardrobe. We want to place POIs on the same 10 cm grid that already drives collision and the live map, so each one has a position the viewer can stand at and a label it can show. The live map and the 3D view would mark them, and choosing one would take the viewer there.</p>
+<h2>Navigation</h2>
+<p>Once places have names, a visitor needs to get from one to another. This needs a navigation method that works on the walkable grid, keeps every route inside walkable space so it never goes through furniture, and is drawn clearly on the live map and as a guide on the floor in the 3D view. We have not chosen the method yet. We will compare options on our own scenes for route quality, behaviour around obstacles and speed, and report the result.</p>
+<h2>Better reconstruction with an AI model</h2>
+<p>Today the camera poses come from COLMAP, which takes about 21 minutes on a laptop for the Room and 87 minutes for the longest capture. Learned reconstruction models are a promising way to shorten this and to cope with poor captures, such as plain walls or few frames. We plan to test such a model against our current pipeline, using the same held-out frames and the same checks, and to adopt it only if it holds up.</p>
+<h2>Filling unseen areas</h2>
+<p>Ceilings, corners and the tops of furniture are the weakest parts of every scene, because the camera barely saw them. We want to try a diffusion model to propose plausible content for those regions. It is an experiment: generated content is not measured data, so it would have to be clearly separated from the captured scene and judged against real photos before we show it.</p>
+<h2>Augmented reality</h2>
+<p>The scene is already metric, with the floor at zero and units in metres, and it carries a walkable map. That makes it a candidate for augmented reality: a phone held up in the real space could show the stored places and the route on top of the camera view. This is a direction for the next stage, and the main open question is how to place the phone accurately in the scan.</p>
+<h2>Stronger collision</h2>
+<p>Collision today is a 2D grid built from two sources: the camera path and the trained splat. Where the two disagree, the splat map can only add obstacles. We want to treat disagreement as a signal, and to record ceiling and floor height so that low overhangs and stairs can be represented.</p>
+<p>Known limitations are listed in <a href="../report/index.html#limits">section 12 of the technical report</a>.</p>
+<h2>Other open items</h2>
+<ul>
+<li>Re-capture in 4K for sharper frames after downscaling.</li>
+<li>Running the one-machine path, <code>python run_all.py --test</code>, on a clean GPU machine.</li>
+</ul>
+</div>
+<div class="foot">NammaSpace &middot; IIT Techfest 2026 &middot; <a href="https://namma-space.pages.dev/">live demo</a> &middot; <a href="https://github.com/chepuridathathreya/Namma-Space">code</a></div>
+<script src="../scroll.js"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+html { font-size: 16px; zoom: 0.9; }
+body { margin: 0; background: #fff; color: #212529; font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; line-height: 1.6; }
+a { color: #337ab7; text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { display: block; max-width: 100%; height: auto; }
+
+.top { border-bottom: 1px solid #8fb0c8; }
+.top .in { width: 760px; max-width: 100%; margin: 0 auto; padding: 14px 20px 12px; box-sizing: border-box; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 24px; }
+.site { font-size: 24px; font-weight: 300; color: #212529; letter-spacing: -0.01em; }
+.site:hover { text-decoration: none; }
+.tabs a { margin-left: 18px; color: #212529; font-size: 15px; }
+.tabs a.on { text-decoration: underline; }
+
+.page { width: 760px; max-width: 100%; margin: 0 auto; padding: 8px 20px 40px; box-sizing: border-box; }
+h1 { font-size: 32px; font-weight: 400; line-height: 1.25; margin: 28px 0 10px; }
+h2 { font-size: 22px; font-weight: 400; margin: 34px 0 10px; }
+h3 { font-size: 17px; font-weight: 600; margin: 22px 0 6px; }
+p { margin: 0 0 12px; }
+.authors { font-size: 15px; margin: 0 0 4px; }
+.small { font-size: 14px; color: #555; }
+
+.links { display: flex; justify-content: center; gap: 30px; margin: 18px 0 18px; padding: 0; list-style: none; text-align: center; font-size: 14px; }
+.links li { min-width: 56px; }
+.links a, .links span { display: block; color: #212529; }
+.links svg { width: 30px; height: 30px; margin: 0 auto 3px; display: block; fill: none; stroke: #444; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.links .off { color: #999; }
+.links .off svg { stroke: #aaa; }
+
+figure { margin: 14px 0; }
+figcaption { font-size: 14px; color: #444; margin-top: 6px; text-align: center; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin: 14px 0; }
+.grid figure { margin: 0; }
+.grid img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; border: 1px solid #ddd; }
+.grid img.map { object-fit: contain; padding: 6px; box-sizing: border-box; }
+.box { border: 1px solid #ccc; }
+
+.video { height: 110px; border: 1px solid #ccc; background: #f6f6f6; display: flex; align-items: center; justify-content: center; text-align: center; color: #666; padding: 20px; box-sizing: border-box; font-size: 15px; }
+video.demo { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border: 1px solid #ccc; }
+
+table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 10px 0 6px; }
+th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: left; }
+th { background: #f3f3f3; font-weight: 600; }
+.wrap { overflow-x: auto; }
+td.n { font-family: Consolas, "Courier New", monospace; font-size: 13px; }
+
+pre { margin: 10px 0 14px; padding: 12px 14px; background: #eef0fb; border: 1px solid #99a8e0; font: 13px/1.5 Consolas, "Courier New", monospace; overflow-x: auto; color: #222; }
+code { font-family: Consolas, "Courier New", monospace; font-size: 0.9em; background: #f3f3f3; padding: 0 4px; }
+
+ul { margin: 0 0 12px; padding-left: 22px; }
+li { margin-bottom: 4px; }
+.toc { border: 1px solid #ddd; background: #fafafa; padding: 10px 16px; margin: 14px 0; font-size: 15px; }
+.toc a { display: block; }
+ol.refs { padding-left: 24px; font-size: 14px; color: #333; }
+.diagram svg { width: 100%; height: auto; display: block; }
+
+.foot { border-top: 1px solid #ddd; margin-top: 30px; padding: 16px 20px 28px; text-align: center; font-size: 13px; color: #666; }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } .tabs a:first-child { margin-left: 0; } h1 { font-size: 26px; } }
+
+iframe.live { display: block; width: 100%; aspect-ratio: 16 / 10; border: 1px solid #ccc; background: #181a19; }
+.livewrap { width: min(1040px, calc(100vw - 40px)); position: relative; left: 50%; transform: translateX(-50%); }
+hr.sep { border: 0; border-top: 1px solid #ccc; margin: 26px 0 18px; }
+.authors .sep { margin: 0 8px; color: #999; }
+.rule { border: 0; border-top: 1px solid #ccc; margin: 22px 0 18px; }
