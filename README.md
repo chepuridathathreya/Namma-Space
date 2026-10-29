@@ -4,18 +4,11 @@ Walk through a real room in your browser, built from one phone video.
 
 NammaSpace turns a walkthrough video into a 3D Gaussian splat and publishes it as a web page where you move with W A S D. Walls and furniture block you, so you can judge a space before you visit it. Built by Matrix (Chepuri Dathatreya) for IIT Techfest 2026.
 
-**Live viewer:** https://namma-space.pages.dev/ | **Project page, report and demo video:** https://namma-space-documentation.pages.dev/
+**Project page, live viewer, demo video and technical report:** https://namma-space-documentation.pages.dev/
 
 ## Live demo
 
-**https://namma-space.pages.dev/**
-
-| Page | What it is |
-|---|---|
-| [`/`](https://namma-space.pages.dev/) | project overview, evidence table and the three scenes |
-| [`/room/`](https://namma-space.pages.dev/room/) | Room, the best scene (held-out PSNR 27.14 dB, SSIM 0.913) |
-| [`/hallway/`](https://namma-space.pages.dev/hallway/) | Hallway and Bedroom, longer capture (26.46 dB) |
-| [`/bedroom/`](https://namma-space.pages.dev/bedroom/) | Early Bedroom, our first capture, kept for comparison |
+Open **https://namma-space-documentation.pages.dev/**. The page has the demo video, the camera-path reconstructions and the live viewer for the Room scene, with links to the other scenes, the technical report, results and roadmap.
 
 Click the scene, then use **W A S D** to walk, **Shift** to run, **Space** to jump, the mouse to look, **Esc** to free the mouse, **R** to return to the door, **M** for the collision grid and **N** for the live map. Add `?debug` to the address for a performance panel.
 
