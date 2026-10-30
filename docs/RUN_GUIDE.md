@@ -90,7 +90,7 @@ Use this if your laptop cannot train but you have access to a GPU PC. Parts 1 an
 
 ## Step 0 - Film the video
 
-- Landscape, **4K at 30 fps** (set it in the camera app: v1 and v2 were accidentally 1080p, and 4K gives much crisper frames after downscaling). Phone at chest or eye height, tilted slightly down. Lock focus, exposure and white balance. A fast shutter (about 1/120 s) in Pro mode cuts blur. Keep D: free: a 7-minute 4K video is 3-4 GB.
+- Follow the tested settings in `docs/CAPTURE_SOP.md` (Room scene: landscape, 1080p at 30 fps, Pro mode, manual focus, 1/100 s, ISO 800, 5000 K, EV 0). Phone at chest or eye height, tilted slightly down. 4K at 30 fps is an untested recommendation for sharper frames after downscaling; the hallway v3 capture used it, but no held-out score exists yet. Keep disk free: a 7-minute 4K video is 3-4 GB.
 - Switch off bright ceiling lamps and close curtains where you can: glossy floors and wardrobes reflect them, and a splat can only fake a reflection with ghost copies.
 - **One continuous walk at the same height and angle.** Never raise the phone toward the ceiling for a second lap; that bent v1.
 - Walk slowly (about half a metre a second), turn slowly. Keep about 1 m from walls. Do not fill the frame with a plain wall or curtain.
@@ -100,7 +100,7 @@ Use this if your laptop cannot train but you have access to a GPU PC. Parts 1 an
 
 Corners and places the walk shows only briefly can be helped with 20-40 photos. Put them in `namma_pipeline\1b_PUT_EXTRA_PHOTOS_HERE\`. STEP 1 adds them automatically and matches each one against every video frame, so a photo does not need to follow the walk; it only needs to show things the video also shows.
 
-- Same phone, **1x lens (never 0.5x)**, landscape, same lights as the video.
+- Same phone, same lens and same Pro settings as the video (the Room used the 0.6x ultra-wide for both), landscape, same lights. Never switch lenses partway through.
 - 2-3 photos per corner, each a step apart, at eye height and tilted up.
 - Empty the folder after the run, or the next scene will pick up the old photos.
 
