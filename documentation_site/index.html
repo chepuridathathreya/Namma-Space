@@ -27,8 +27,8 @@
 <p>The pipeline picks the sharpest frame in every half second, recovers camera poses with COLMAP, fixes the floor and metric scale from the camera path, trains the splat with nerfstudio, then aligns, cleans and compresses it to a file of about 8 MB that a WebGL2 viewer streams and draws. On the Room scene (613 frames) it reaches a held-out PSNR of 27.14 dB, SSIM 0.913 and LPIPS 0.191 after 14 minutes of training on one GPU. The limits are stated plainly in the <a href="roadmap/index.html">roadmap</a>.</p>
 
 <h2 id="demo-video">Demo video</h2>
-<video class="demo" controls preload="metadata" poster="video/namma_demo_poster.jpg" width="1280" height="720"><source src="video/namma_demo.mp4" type="video/mp4"><track kind="captions" src="video/namma_demo_captions.vtt" srclang="en" label="English"></video>
-<p class="small">Two minutes, from one phone video to walking through the room in a browser. Every viewer shot is a real screen recording.</p>
+<video class="demo" controls preload="metadata" poster="video/namma_demo_poster.jpg" width="1280" height="720"><source src="video/namma_demo_vo3.mp4" type="video/mp4"><track kind="captions" src="video/namma_demo_vo3_captions.vtt" srclang="en" label="English"></video>
+<p class="small">Three minutes with narration, from one phone video to walking through the room and the hallway in a browser. Every viewer shot is a real screen recording, with labels added.</p>
 
 <h2 id="colmap">Camera path and sparse reconstruction</h2>
 <figure><img src="img/hero_sparse.jpg" width="1400" height="640" alt="Two sparse COLMAP reconstructions of indoor spaces with the camera path in red"><figcaption>Sparse COLMAP reconstructions with the camera path in red: the Room (left) and a longer hallway and bedroom capture, v3 (right). Ceiling points are removed so the interior is visible.</figcaption></figure>
