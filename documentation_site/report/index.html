@@ -50,7 +50,7 @@
     <p>COLMAP is the slowest step on a laptop. For the Room scene (613 frames) preparation took about 21 minutes. A 7-minute capture with 883 frames took 87 minutes, mostly bundle adjustment on the CPU.</p>
 
     <h2 id="world">4. Floor, scale and the world frame</h2>
-    <p>COLMAP's coordinates are arbitrary: they have no up direction and no units. A video also cannot measure gravity, so the floor is found from the data. A plane is fitted to the lowest points under the walking path, which gives the up direction and sets the floor to height zero. The scale is then set by assuming the phone was 1.4 m above the floor. The result is a recipe, <code>world.json</code>, with a scale, a rotation and a translation that maps COLMAP coordinates into a shared <em>world frame</em> in metres with Y up.</p>
+    <p>COLMAP's coordinates are arbitrary: they have no up direction and no units. A video also cannot measure gravity, so the floor is found from the data. A plane is fitted to the lowest points under the walking path, which gives the up direction and sets the floor to height zero. The scale is then set by assuming the phone was 1.4 m above the floor. This is an assumption we have not checked with a tape measure, so metre figures are approximate. The result is a recipe, <code>world.json</code>, with a scale, a rotation and a translation that maps COLMAP coordinates into a shared <em>world frame</em> in metres with Y up.</p>
     <p>Sanity checks print where known objects land (a bed surface should be 0.45 to 0.55 m and a ceiling 2.5 to 3.1 m), and the script stops if the camera up directions disagree, which happens when the phone was not held upright. The fixed phone height is an assumption, not a measurement, and is listed under limitations.</p>
 
     <h2 id="training">5. Gaussian splat training</h2>
@@ -75,7 +75,7 @@
       <img src="../img/viewer_ui.jpg" width="1280" height="720" alt="The viewer with live map and controls" loading="lazy">
       <figcaption>Figure 3. The viewer in the Room scene, with the live map at the bottom left and the grouped controls bar.</figcaption>
     </figure>
-    <p>Frame rate depends on how many Gaussians are drawn and on which GPU the browser actually uses. On a laptop with both an integrated and a discrete GPU, Windows may run the browser on the integrated one. We measured 24 to 38 fps with all splats on the integrated GPU and 170 to 180 fps on the RTX 3060 laptop GPU. A web page cannot choose the GPU, so the viewer measures its frame rate about 2.5 seconds after loading and, below 35 fps, steps down through lower splat counts and render resolutions and tells the user.</p>
+    <p>Frame rate depends on how many Gaussians are drawn and on which GPU the browser actually uses. On a laptop with both an integrated and a discrete GPU, Windows may run the browser on the integrated one. We saw 24 to 38 fps with all splats on the integrated GPU and 170 to 180 fps on the RTX 3060 laptop GPU. These are informal single-machine observations with all splats drawn, not a standardized benchmark: browser version, resolution, test length and camera path were not controlled, so they do not guarantee the same speed on other hardware. A web page cannot choose the GPU, so the viewer measures its frame rate about 2.5 seconds after loading and, below 35 fps, steps down through lower splat counts and render resolutions and tells the user.</p>
 
     <h2 id="results">9. Results</h2>
     <p>Scores are measured on held-out frames: for the hallway run every eighth frame was held out (109 of 868). Settings and timings for each scene are in its training report in the repository.</p>
@@ -130,7 +130,8 @@ python run_all.py --video my_walkthrough.mp4</pre>
     <ul>
       <li><strong>Ceilings and unseen areas</strong> are rough or dark because the camera barely saw them.</li>
       <li><strong>Collision is two-dimensional.</strong> It stops the viewer at walls and furniture but does not model stairs or overhangs.</li>
-      <li><strong>Scale is assumed</strong> from a 1.4 m phone height, not measured from a reference object.</li>
+      <li><strong>Scale is assumed</strong> from a 1.4 m phone height, not measured from a reference object, so real-world dimensions are approximate.</li>
+      <li><strong>Collision is derived, not surveyed.</strong> The grid comes automatically from the camera path, sparse points and splat evidence. It has not been validated against measured walls, furniture or doorways, so it is a believable walking boundary, not surveyed geometry.</li>
       <li><strong>Quality depends on the capture.</strong> A fast or non-continuous walk reduces the number of frames COLMAP can place.</li>
       <li><strong>Training needs a large GPU</strong> (about 16 GB), which is why our own setup trains on a separate machine.</li>
     </ul>
