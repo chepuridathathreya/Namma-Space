@@ -75,7 +75,7 @@ code { font-family: Consolas, monospace; font-size: 8.8pt; background: #f1f2f3; 
 <p>The finishing step reverses nerfstudio's re-centring and applies <code>world.json</code>, so the splat lands in the same metric frame as the collision grid. It verifies the alignment by measuring the distance from the Gaussians to the real COLMAP points and refuses to publish if the median exceeds 0.4 m. Cleaning removes almost-transparent Gaussians, absurdly large ones, and floaters more than 1.2 m from anything the cameras saw. Glossy floors and wardrobes cannot be modelled as mirrors, so training invents ghost copies below the floor; everything more than 12 cm under the floor, and anything above 3.3 m, is deleted. The rest is sorted most-important-first (opacity times size), so any file prefix is the best subset, and packed into our own <code>.qsplat</code> format: 17 bytes per Gaussian, gzip-compressed, about 8 MB for the Room.</p>
 
 <figure>
-<img src="../../documentation_site/img/hero_sparse.jpg" alt="Sparse COLMAP reconstructions">
+<img src="../../../documentation_site/img/hero_sparse.jpg" alt="Sparse COLMAP reconstructions">
 <figcaption>Figure 2. Sparse COLMAP reconstructions with the camera path in red: the Room (left) and a longer hallway and bedroom capture (right). Ceiling points are removed so the interior is visible.</figcaption>
 </figure>
 
@@ -117,8 +117,8 @@ code { font-family: Consolas, monospace; font-size: 8.8pt; background: #f1f2f3; 
 <h3>5.2 Viewer</h3>
 <p>The viewer is plain static files with no build step. It decodes the <code>.qsplat</code>, draws the Gaussians with our own WebGL2 renderer and sorts them back to front continuously so translucent blobs blend correctly. Movement is first-person: W A S D, mouse look, run and jump. Each frame it tries to move and, if the target cell is blocked, slides along the wall. A live map drawn from the collision grid shows walkable floor, obstacles, the position and the viewing cone. Because the file is sorted best-first, buttons can draw 250k, 500k or all Gaussians.</p>
 <div class="two">
-<figure><img src="../../documentation_site/img/viewer_ui.jpg" alt="Viewer"><figcaption>Figure 3. The viewer in the Room: live map at the bottom left, grouped controls bar.</figcaption></figure>
-<figure><img src="../../documentation_site/img/room_map.png" alt="Room collision grid"><figcaption>Figure 4. Room collision grid: walkable (green), obstacle (orange), blocked margin (grey).</figcaption></figure>
+<figure><img src="../../../documentation_site/img/viewer_ui.jpg" alt="Viewer"><figcaption>Figure 3. The viewer in the Room: live map at the bottom left, grouped controls bar.</figcaption></figure>
+<figure><img src="../../../documentation_site/img/room_map.png" alt="Room collision grid"><figcaption>Figure 4. Room collision grid: walkable (green), obstacle (orange), blocked margin (grey).</figcaption></figure>
 </div>
 <h3>5.3 Performance</h3>
 <p>Frame rate depends on how many Gaussians are drawn and which GPU the browser uses. We measured 24 to 38 fps with all Gaussians on a laptop's integrated GPU and 170 to 180 fps on the RTX 3060 laptop GPU. A web page cannot choose the GPU, so the viewer measures its frame rate about 2.5 s after loading and, below 35 fps, steps down through fewer Gaussians and lower render resolution and tells the user.</p>
