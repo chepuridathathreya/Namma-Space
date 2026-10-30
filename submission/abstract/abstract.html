@@ -133,7 +133,7 @@ code { font-family: Consolas, monospace; font-size: 8.8pt; background: #f1f2f3; 
 <p class="small">PSNR and SSIM: higher is better. LPIPS: lower is better. Scores are on frames held out from training (hallway: every eighth frame, 109 of 868). The Early Bedroom predates our evaluation step. The Room is a different scene from the hallway, so its higher score shows progress in the method, not a controlled comparison. Within the hallway family a first run scored 23.56 dB on 709 frames and the improved run 26.46 dB on 868 frames.</p>
 
 <h2>7. Problems met and what changed</h2>
-<p>Each scene exposed a fault that changed the pipeline. Some are fixed, some only reduced; the full list is in section 10 of the technical report.</p>
+<p>Each scene exposed a fault that changed the pipeline. Some are fixed, some only reduced; the full list is in section 10 of the online technical report (https://namma-space-documentation.pages.dev/report/), not in this PDF.</p>
 <ul>
 <li><b>Capture:</b> black ceiling, doubled walls from a second lap, ghost reflections. Produced the one-lap rule, the extra-photo step and the under-floor cleanup.</li>
 <li><b>Software:</b> grey frames (now checked at the start of both steps), a fake splat made from raw COLMAP points (removed; a splat must come from real training), two scenes on one site (now one video is one scene), a wrong header that made the compressed file unreadable, and viewer faults (black screen on a scene without a mesh, a late depth-sort result drawing a scrambled frame, and collision working only near the walked path).</li>
