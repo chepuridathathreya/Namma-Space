@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Namma space abstract</title>
+<style>
+@page { size: A4; margin: 14mm 13mm 14mm 13mm; }
+* { box-sizing: border-box; }
+body { font-family: "Times New Roman", Times, serif; font-size: 10.9pt; line-height: 1.33; color: #000; margin: 0; text-align: justify; hyphens: auto; }
+.head { text-align: center; margin-bottom: 4px; }
+.head h1 { font-size: 16pt; line-height: 1.15; font-weight: bold; margin: 0 0 4px; }
+.head .au { font-size: 10.5pt; margin: 0 0 1px; }
+.head .af { font-size: 9pt; font-style: italic; margin: 0 0 3px; }
+.head .res { font-size: 8.6pt; margin: 2px 0 0; }
+.abs { margin: 4px 0 3px; font-size: 10pt; }
+.abs b, .kw b { font-style: italic; }
+.kw { font-size: 10pt; margin: 0 0 4px; }
+hr { border: 0; border-top: 0.8pt solid #000; margin: 4px 0 5px; }
+.cols { column-count: 2; column-gap: 7mm; }
+h2 { font-size: 10.9pt; font-weight: bold; text-align: center; text-transform: uppercase; margin: 6px 0 2px; break-after: avoid; }
+p { margin: 0 0 3.5px; }
+code { font-family: "Courier New", monospace; font-size: 8.9pt; }
+pre { font-family: "Courier New", monospace; font-size: 8pt; line-height: 1.25; margin: 2px 0 4px; padding: 2px 4px; border: 0.6pt solid #000; text-align: left; white-space: pre-wrap; break-inside: avoid; }
+figure { margin: 4px 0 5px; break-inside: avoid; text-align: center; }
+figure img { display: block; border: 0.6pt solid #000; margin: 0 auto; }
+figcaption { font-size: 8.4pt; text-align: justify; margin-top: 2px; }
+.span { column-span: all; }
+.tb { break-inside: avoid; }
+.cap { font-size: 8.4pt; text-align: center; text-transform: uppercase; margin: 5px 0 2px; break-after: avoid; }
+.cap i { display: block; font-style: normal; }
+table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 0 0 4px; border-top: 1pt solid #000; border-bottom: 1pt solid #000; break-inside: avoid; }
+th { border-bottom: 0.6pt solid #000; padding: 1px 3px; text-align: left; font-weight: bold; }
+td { padding: 1px 3px; text-align: left; vertical-align: top; }
+td.n, th.n { text-align: right; white-space: nowrap; }
+.note { font-size: 8.6pt; }
+.ref { font-size: 8.4pt; text-align: left; margin: 0 0 1px; padding-left: 15px; text-indent: -15px; }
+</style>
+</head>
+<body>
+
+<div class="head">
+<h1>NammaSpace: Walkable Digital Twins of Indoor Spaces from a Single Phone Video</h1>
+<p class="au">Team Matrix &mdash; Chepuri Dathatreya</p>
+<p class="af">IIT Techfest 2026, NammaSpace Challenge, Round 1: Technical Abstract</p>
+<p class="res">Project page and demo video: https://namma-space-documentation.pages.dev/ &nbsp;|&nbsp; Live viewer (Room): https://namma-space.pages.dev/room/ &nbsp;|&nbsp; Code: https://github.com/chepuridathathreya/Namma-Space</p>
+</div>
+<hr>
+
+<p class="abs"><b>Abstract</b>&mdash;NammaSpace turns one handheld phone video of an indoor space into a walkable 3D digital twin that runs in an ordinary web browser, with no scanner, depth sensor or hand modelling. Appearance and physics are kept in two separate representations: a 3D Gaussian splat [1] draws the room, and a 10&nbsp;cm occupancy grid derived from the scan decides where the viewer can stand. On the best scene (the Room, 613 frames) the system reaches a held-out PSNR of 27.14&nbsp;dB after 819&nbsp;s of training on one GPU, in a scene file of about 8&nbsp;MB. Three scenes are live and walkable. The work was built by Team Matrix for the NammaSpace Challenge, IIT Techfest 2026 (Round 1).</p>
+<p class="kw"><b>Index Terms</b>&mdash;3D Gaussian splatting, structure from motion, digital twin, occupancy grid, WebGL2, indoor reconstruction, capture procedure.</p>
+<hr>
+
+<div class="cols">
+
+<h2>1. Architecture</h2>
+<p>Three programs hand files to each other: Prepare (CPU), Train (GPU, 16&nbsp;GB or more) and Finish (CPU, seconds). <code>run_all.py</code> runs all three on one machine. The team's own setup runs Prepare and Finish on a laptop (6&nbsp;GB GPU) and Train on a shared GPU PC.</p>
+<div class="tb span"><p class="cap">Table I<i>Pipeline stages</i></p>
+<table>
+<tr><th>Stage</th><th>Output</th><th>Hardware</th><th class="n">Time (Room)</th></tr>
+<tr><td>1. Frames, COLMAP poses, floor and scale</td><td>cameras, points, <code>world.json</code></td><td>Laptop CPU</td><td class="n">about 21 min</td></tr>
+<tr><td>2. Gaussian training (Splatfacto, 30k steps)</td><td><code>splat.ply</code></td><td>RTX PRO 6000 GPU</td><td class="n">819 s</td></tr>
+<tr><td>3. Align, clean, compress</td><td><code>scene.qsplat</code></td><td>Laptop CPU</td><td class="n">about 15 s</td></tr>
+<tr><td>4. Web viewer (WebGL2 plus collision)</td><td>Static site</td><td>Any desktop browser</td><td class="n">n/a</td></tr>
+</table></div>
+
+<figure class="span">
+<img src="img/hero_sparse.jpg" alt="Sparse COLMAP reconstructions with camera path" style="max-height:66mm;max-width:100%;object-fit:contain">
+<figcaption>Fig. 1. Sparse COLMAP reconstructions with the camera path in red: the Room (left) and a longer hallway and bedroom capture (right). Ceiling points are removed so the interior is visible.</figcaption>
+</figure>
+
+<h2>2. Reconstruction Pipeline</h2>
+<p><b><i>Frame selection.</i></b> Each frame is scored by the variance of its Laplacian on a reduced copy. The video is cut into half-second windows and the sharpest frame of each is kept. A colour check stops the run if frames are grey (an early version saved a greyscale copy by mistake).</p>
+<p><b><i>Camera poses.</i></b> COLMAP [2] runs feature extraction, sequential matching (suits video) and mapping. A health check keeps the largest model, warns below 80% of frames placed or when the walk splits into two large pieces, and stops below 40%. This is the slowest laptop step: 87 minutes for a 7-minute capture (883 frames).</p>
+<p><b><i>Floor, scale and world frame.</i></b> A plane fitted to the lowest points under the walking path sets the up direction and floor height zero. Scale assumes the phone was 1.4&nbsp;m above the floor. This is an assumption, not a measurement, so all metric dimensions here are approximate. <code>world.json</code> maps COLMAP coordinates into one metric frame with Y up.</p>
+<p><b><i>Training.</i></b> 30,000 steps of Splatfacto (nerfstudio [3], gsplat [4]) at full image size, with some frames held out for scoring. The Room peaked at 16,251&nbsp;MiB of GPU memory and exported 541,337 Gaussians after dropping 7,444 almost-transparent ones.</p>
+<p><b><i>Alignment, cleaning, compression.</i></b> The splat is moved into the same metric frame as the collision grid, and publishing is refused if the median distance from Gaussians to COLMAP points exceeds 0.4&nbsp;m. Cleaning removes almost-transparent or absurdly large Gaussians, floaters more than 1.2&nbsp;m from anything the cameras saw, and ghost copies more than 12&nbsp;cm under the floor or above 3.3&nbsp;m (glossy surfaces cannot be modelled as mirrors). The rest is sorted most-important-first (opacity times size), so any file prefix is the best subset, then packed into the custom <code>.qsplat</code> format (40-byte header, 17 bytes per Gaussian) and gzipped.</p>
+
+<h2>3. Capture SOP</h2>
+<p>Most failures were capture faults, not software faults. The full SOP is in <code>docs/CAPTURE_SOP.md</code>; it describes only what was done for the Room.</p>
+<div class="tb"><p class="cap">Table II<i>Capture settings (Room scene)</i></p>
+<table>
+<tr><th>Item</th><th>Setting</th></tr>
+<tr><td>Phone, mode</td><td>POCO X6, manual (Pro) mode</td></tr>
+<tr><td>Lens</td><td>0.6x ultra-wide, used throughout</td></tr>
+<tr><td>Focus, shutter, ISO</td><td>Manual focus, 1/100 s, ISO 800</td></tr>
+<tr><td>White balance, EV</td><td>5000 K fixed, EV 0</td></tr>
+<tr><td>Video</td><td>1920 &times; 1080, 30 fps, landscape</td></tr>
+</table></div>
+<p>Fixed settings stop the same wall changing brightness between frames. Use even lighting, close curtains that throw bright patches, keep people and pets out, wipe the lens and cover mirrors. Hold the phone at chest or eye height, landscape, tilted slightly down. Walk one continuous lap at about 0.5&nbsp;m/s, turn slowly and finish where you started. Tilt up slowly for the ceiling if wanted.</p>
+<p>Afterwards, take still photos from the same height, lens and settings: three to four per corner, a small step apart, each showing something the video also shows. The Room used 26 photos, all registered.</p>
+<div class="tb"><p class="cap">Table III<i>Failure cases and rules</i></p>
+<table>
+<tr><th>Problem</th><th>Cause</th><th>Rule</th></tr>
+<tr><td>Doubled walls, bent doors</td><td>Second lap, other angle</td><td>One lap, one height</td></tr>
+<tr><td>Black ceiling</td><td>Plain ceiling never filmed</td><td>Tilt up, add ceiling photos</td></tr>
+<tr><td>Ghosts below floor</td><td>Reflections</td><td>Cover mirrors; delete under-floor Gaussians</td></tr>
+<tr><td>Fewer frames placed</td><td>Fast or broken walk</td><td>Slow, continuous walk</td></tr>
+<tr><td>Rough corners</td><td>Barely covered</td><td>Extra photos</td></tr>
+</table></div>
+<p class="note">Not measured: lighting; capture time (about 8 to 10 minutes is an estimate); the effect of the extra photos. A 4K re-capture is still open.</p>
+
+<h2>4. Collision and Web Viewer</h2>
+<p><b><i>Collision grid.</i></b> A 10&nbsp;cm occupancy grid [5]. A cell is an obstacle when at least three points lie in it between 0.15&nbsp;m and 1.7&nbsp;m above the floor. Free space comes from cells near the walked path, and nothing within 20&nbsp;cm of the path can be an obstacle. A 25&nbsp;cm margin (the player radius) is added around obstacles (Fig. 2).</p>
+<p>The trained splat is a second, independent source: its map is combined with the camera-path map, only the region connected to the walked path is kept, and the step stops if the walked path or start would be blocked. On the Room this removed 17 of 430 walkable cells while the walked path stayed 100% walkable. The grid has not been validated against measured walls, furniture or doorways, so treat it as a believable walking boundary, not surveyed geometry.</p>
+<figure>
+<img src="img/room_map.png" alt="Room collision grid" style="width:74%">
+<figcaption>Fig. 2. Room collision grid: walkable (green), obstacle (orange), blocked margin (grey). The blue dot is the start point.</figcaption>
+</figure>
+<p><b><i>Viewer.</i></b> Plain static files, no build step. A custom WebGL2 shader on three.js draws the Gaussians, and a background worker re-sorts them back to front. Movement is first-person; if the target cell is blocked the viewer slides along the wall. A live map shows walkable floor, obstacles, position and viewing cone. Because the file is sorted best-first, the viewer can draw 250k, 500k or all Gaussians.</p>
+<div class="tb"><p class="cap">Table IV<i>Viewer controls</i></p>
+<table>
+<tr><th>Input</th><th>Action</th></tr>
+<tr><td>W A S D or arrows, Shift, Space</td><td>Move, run, jump</td></tr>
+<tr><td>Mouse (click scene first); Esc</td><td>Look; free the cursor</td></tr>
+<tr><td>R</td><td>Return to the door</td></tr>
+<tr><td>1, 2</td><td>Splat view, mesh view (if the scene has one)</td></tr>
+<tr><td>M, N</td><td>Collision grid overlay, live map</td></tr>
+</table></div>
+<p><b><i>Performance.</i></b> Informal single-machine observations, not a benchmark: 24 to 38 fps on a laptop's integrated GPU with automatic detail steps (about 250k to 500k Gaussians), and 170 to 180 fps on an RTX 3060 laptop GPU with all Gaussians. At start-up the viewer measures its frame rate and, below 35 fps, steps down to fewer Gaussians and lower resolution.</p>
+
+<h2>5. Results</h2>
+<p>The Room scores 27.14&nbsp;dB PSNR, 0.913 SSIM and 0.191 LPIPS on held-out frames. Higher is better for PSNR and SSIM; lower is better for LPIPS. The hallway used every eighth frame as held-out (109 of 868).</p>
+<div class="tb span"><p class="cap">Table V<i>Reconstruction results per scene</i></p>
+<table>
+<tr><th>Scene</th><th class="n">Frames</th><th class="n">Gaussians</th><th class="n">PSNR (dB)</th><th class="n">SSIM</th><th class="n">LPIPS</th><th class="n">Training (s)</th><th class="n">Walkable (m&sup2;)</th></tr>
+<tr><td>Room</td><td class="n">613</td><td class="n">541,337</td><td class="n">27.14</td><td class="n">0.913</td><td class="n">0.191</td><td class="n">819</td><td class="n">4.3</td></tr>
+<tr><td>Hallway and Bedroom (v2)</td><td class="n">868</td><td class="n">650,654</td><td class="n">26.46</td><td class="n">0.874</td><td class="n">0.244</td><td class="n">995</td><td class="n">15.8</td></tr>
+<tr><td>Early Bedroom</td><td class="n">n/a</td><td class="n">700,000 shown</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">n/a</td><td class="n">8.1</td></tr>
+</table></div>
+<p>The Early Bedroom predates the evaluation step. The Room is a different scene from the hallway, so its higher score may come from the capture method or an easier room; no controlled improvement is claimed. Within the hallway family, a first run scored 23.56&nbsp;dB (709 frames) and the improved run 26.46&nbsp;dB (868 frames), but frame count, pipeline fixes and capture conditions all changed, so the gain is not attributed to one cause. The whole Room training job (prepare, train, export) took 843&nbsp;s.</p>
+
+<h2>6. Setup, Limitations and Future Work</h2>
+<p>Requirements: Linux or WSL2, an NVIDIA GPU with 16&nbsp;GB or more, 20&nbsp;GB of disk, ffmpeg, COLMAP 3.9 or newer, and nerfstudio with gsplat (Blackwell GPUs need CUDA 12.8 builds).</p>
+<pre>python run_all.py --check
+python run_all.py --test
+python run_all.py --video my_walkthrough.mp4</pre>
+<p>These list missing requirements, run the bundled sample with a short training, and run a full capture to the website. <i>Tested:</i> preparation and finishing on Windows; training on Linux in the two-machine setup; the requirement check and finishing on the bundled sample. <i>Not yet tested:</i> one-machine training on a separate clean GPU machine.</p>
+<p><b>Limitations.</b> Ceilings and unseen areas are rough or dark. Collision is two-dimensional: no stairs or overhangs. Scale is assumed from a 1.4&nbsp;m phone height. A fast or broken walk reduces the frames COLMAP can place. Training needs about 16&nbsp;GB of GPU memory.</p>
+<p><b>Future work.</b> Points of interest on the same grid as the live map, and navigation that keeps routes in walkable space (Round 2); a learned reconstruction model, tested on the same held-out frames; diffusion-based filling of unseen areas, an AR view, and stronger collision where the two evidence sources disagree.</p>
+
+<h2>7. Interfaces and Data Contracts</h2>
+<p><b><i>What the stages exchange.</i></b> Prepare converts a recorded space into original-colour selected frames, COLMAP camera intrinsics and registered poses (<code>cameras.bin</code>, <code>images.bin</code>), sparse 3D landmarks (<code>points3D.bin</code>), <code>world.json</code> and an initial collision grid. Train reads that camera solution and imagery, optimizes Splatfacto, and returns <code>splat.ply</code> and <code>dataparser_transforms.json</code>. Finish reverses training normalization, applies the world transform, validates spatial alignment, filters unreliable Gaussians, refines scan-derived collision and emits a static scene package. The browser loads <code>assets/manifest.json</code>, the compressed <code>.qsplat</code> and <code>*_collision.json</code>; no training server runs when someone visits the deployed scene.</p>
+<p>A video, its solved cameras, its Gaussian scene and its collision grid must all belong to the same capture. This one-video, one-scene contract matters: an earlier pipeline accidentally mixed assets from different scenes. The single-machine <code>run_all.py</code> and the team's ZIP-based laptop-to-GPU handoff implement the same three stages.</p>
+<p><b><i>Spatial query and collision semantics.</i></b> The world frame has Y upward and the estimated floor at Y&nbsp;=&nbsp;0. For a world location (x, z), the grid column is floor((x &minus; originX) / cell) and its row is floor((z &minus; originZ) / cell), with cell&nbsp;=&nbsp;0.10&nbsp;m. The JSON distinguishes <i>occupied</i> cells, supported by wall or furniture evidence, from <i>blocked</i> cells, which also include clearance inflation and unavailable floor. A player radius of 0.25&nbsp;m limits the route to positions with sufficient predicted clearance.</p>
+<p>The initial grid uses sparse COLMAP points and the observed walking path. A second occupancy estimate uses the cleaned Gaussian reconstruction. The finishing script combines the two, rejects a map that blocks the start or observed route, and retains the connected walkable region. Collision is therefore reconstructed from the scan, not painted by hand. It remains a 2D approximation and does not represent stairs, overhangs or surveyed geometry. Monocular scale is anchored to an assumed 1.4&nbsp;m phone height, so reported distances inherit that uncertainty.</p>
+<p><b><i>Viewer asset and rendering boundary.</i></b> The exported PLY contains Gaussian position, size, orientation, opacity and colour. The <code>.qsplat</code> stores a 40-byte header and 17 quantized bytes per Gaussian before gzip compression. High-contribution Gaussians come first, so the viewer can draw useful 250k or 500k prefixes instead of full detail. WebGL2 provides visual appearance; the grid controls movement. A visually convincing wall is not, by itself, proof that the corresponding blocked cell is spatially accurate.</p>
+
+<h2>8. What the Evidence Does and Does Not Show</h2>
+<p><b><i>Image quality and SOP comparisons.</i></b> Room and Hallway and Bedroom v2 have held-out scores, but they are different physical rooms, so the higher Room score cannot be attributed solely to its capture SOP. The hallway change from 23.56&nbsp;dB to 26.46&nbsp;dB likewise involved several changes at once. To isolate an SOP factor, repeat the experiment in the same room, hold out the same viewpoints, keep training settings fixed and change one factor (lens, resolution, extra photos or walking route). The tested Room recipe was 0.6x ultra-wide at 1920 &times; 1080, 30 fps; a higher-resolution alternative has no directly comparable held-out score. A complete split manifest and repeated-run statistics should accompany future formal claims.</p>
+<p><b><i>Viewer FPS.</i></b> The 24 to 38 fps (integrated GPU) and 170 to 180 fps (RTX 3060 laptop) figures are not standardized cross-device benchmarks. FPS depends on the browser's GPU selection, active Gaussian count, viewport size, auto-detail resolution, camera view and software environment. A reproducible test must fix scene, camera route, viewport, device-pixel ratio, browser and driver, detail mode, warm-up and duration, log the active resolution and Gaussian budget, and report median FPS, 1% low FPS and p95 frame time over repeated trials. These results have not yet been collected under one protocol.</p>
+<p><b><i>Collision, scale and reproducibility.</i></b> Independent validation should compare predicted blocked and free cells with a measured floor plan and annotated doorway and furniture positions, reporting both false-open obstacles and false-blocked accessible floor; test wall sliding, diagonal movement and start-point reset; and compare at least one known room dimension against the 1.4&nbsp;m scaling assumption. The repository provides <code>--check</code>, <code>--test</code> and <code>--video</code>, but a full fresh one-machine GPU test and native Windows training were not independently verified. These are open validation tasks, not claimed capabilities.</p>
+
+<h2>9. Traceability</h2>
+<p style="text-align:left">The source of truth is the repository: <code>docs/CAPTURE_SOP.md</code> (tested capture), <code>docs/RUN_GUIDE.md</code> (workflow), <code>docs/HARDWARE_AND_REMOTE_SETUP.md</code> (environment), <code>namma_pipeline/scripts/step1_prepare.py</code> (frame selection and COLMAP), <code>build_collision_from_colmap.py</code> and <code>build_collision_from_splat.py</code> (automatic occupancy), <code>step3_finish.py</code> (alignment and packaging), <code>namma_pipeline/viewer_template/main.js</code> (rendering and navigation), and <code>01_room/notes/TRAINING_REPORT.md</code> (Room metrics). The narrated demo is a separate submission asset. Point-of-interest navigation, a learned reconstruction model, generative completion and AR are roadmap ideas, not demonstrated Round 1 functions.</p>
+
+<h2>References</h2>
+<p class="ref">[1] B. Kerbl, G. Kopanas, T. Leimk&uuml;hler and G. Drettakis, &ldquo;3D Gaussian splatting for real-time radiance field rendering,&rdquo; <i>ACM Trans. Graph. (SIGGRAPH)</i>, vol. 42, no. 4, 2023.</p>
+<p class="ref">[2] J. L. Sch&ouml;nberger and J.-M. Frahm, &ldquo;Structure-from-motion revisited,&rdquo; in <i>Proc. IEEE CVPR</i>, 2016, pp. 4104&ndash;4113.</p>
+<p class="ref">[3] M. Tancik <i>et al.</i>, &ldquo;Nerfstudio: A modular framework for neural radiance field development,&rdquo; in <i>ACM SIGGRAPH Conf. Proc.</i>, 2023.</p>
+<p class="ref">[4] V. Ye <i>et al.</i>, &ldquo;gsplat: An open-source library for Gaussian splatting,&rdquo; arXiv:2409.06765, 2024.</p>
+<p class="ref">[5] A. Elfes, &ldquo;Using occupancy grids for mobile robot perception and navigation,&rdquo; <i>Computer</i>, vol. 22, no. 6, pp. 46&ndash;57, 1989.</p>
+
+</div>
+</body>
+</html>
