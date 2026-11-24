@@ -76,7 +76,7 @@ python run_all.py --test
 python run_all.py --video my_walkthrough.mp4
 ```
 
-`--check` lists what is missing, `--test` runs the bundled sample through all three stages in minutes, and `--video` runs your own capture end to end. The options are in the [run guide](RUN_GUIDE.md).
+`--check` lists what is missing, `--test` runs the bundled sample through all three stages in minutes, and `--video` runs your own capture end to end. The options are in the [run guide](run-guide.md).
 
 How well this is tested:
 
@@ -87,4 +87,4 @@ How well this is tested:
 ## What you can verify without any GPU
 
 - The three finished scenes run in any modern browser with WebGL2: serve a `site/` folder with `python -m http.server`.
-- The per-scene training reports record the exact settings, timings and held-out scores, for example [`01_room/notes/TRAINING_REPORT.md`](../01_room/notes/TRAINING_REPORT.md).
+- The per-scene training reports record the exact settings, timings and held-out scores, for example [`scenes/room/notes/TRAINING_REPORT.md`](../scenes/room/notes/TRAINING_REPORT.md).

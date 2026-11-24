@@ -170,4 +170,4 @@ grep -E "^(gaussians|heldout_)" "$PKG/timing.txt" | sed 's/^/ /'
 echo
 echo " STEP 2 FINISHED"
 echo " RESULT ZIP TO SEND BACK: $(pwd)/$ZIP  ($(du -h "$ZIP" | cut -f1))"
-echo " Copy it to the laptop folder 3_PUT_REMOTE_RESULT_HERE and run STEP 3."
+echo " Copy it to the laptop folder workspace/from_gpu and run STEP 3."

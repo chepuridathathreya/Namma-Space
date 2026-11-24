@@ -12,11 +12,12 @@ import time
 import zipfile
 
 REPO = os.path.dirname(os.path.abspath(__file__))
-PIPELINE = os.path.join(REPO, "namma_pipeline")
-SCRIPTS = os.path.join(PIPELINE, "scripts")
-RUNS = os.path.join(PIPELINE, "runs")
-OUTBOX = os.path.join(PIPELINE, "2_SEND_TO_REMOTE")
-SAMPLE_ZIP = os.path.join(REPO, "test", "sample_scene.zip")
+SCRIPTS = os.path.join(REPO, "src", "pipeline")
+TRAINING = os.path.join(REPO, "src", "training")
+WORKSPACE = os.path.join(REPO, "workspace")
+RUNS = os.path.join(WORKSPACE, "runs")
+OUTBOX = os.path.join(WORKSPACE, "to_gpu")
+SAMPLE_ZIP = os.path.join(REPO, "tests", "data", "sample_scene.zip")
 MIN_GPU_MIB = 16000
 MIN_DISK_GB = 20
 
@@ -101,7 +102,7 @@ def run_preflight(need_prepare, need_train, allow_small_gpu):
         print("")
         for label, hint in blocked:
             print(f"  fix: {label} -> {hint}")
-        raise Problem("some requirements are missing. See docs/HARDWARE_AND_REMOTE_SETUP.md for the full list.")
+        raise Problem("some requirements are missing. See docs/hardware.md for the full list.")
     print("\n  all requirements met")
 
 
@@ -137,10 +138,10 @@ def stage_prepare(arguments):
     if arguments.window is not None:
         command += ["--window", str(arguments.window)]
     started = time.time()
-    run_checked(command, PIPELINE, "STEP 1 (prepare)")
+    run_checked(command, REPO, "STEP 1 (prepare)")
     bundle = newest(os.path.join(OUTBOX, "*_to_remote.zip"))
     if not bundle or os.path.getmtime(bundle) < started:
-        raise Problem("STEP 1 finished but no new bundle zip was written to namma_pipeline/2_SEND_TO_REMOTE")
+        raise Problem("STEP 1 finished but no new bundle zip was written to workspace/to_gpu")
     return bundle
 
 
@@ -176,7 +177,7 @@ def install_sample():
         shutil.copytree(os.path.join(root, "step1", part), target)
     bundle = os.path.join(root, "bundle")
     shutil.copyfile(os.path.join(root, "scene.json"), os.path.join(bundle, "scene.json"))
-    for script in glob.glob(os.path.join(PIPELINE, "remote", "*.sh")):
+    for script in glob.glob(os.path.join(TRAINING, "*.sh")):
         os.makedirs(os.path.join(bundle, "scripts"), exist_ok=True)
         shutil.copyfile(script, os.path.join(bundle, "scripts", os.path.basename(script)))
     destination = os.path.join(run_dir, "train")
@@ -193,7 +194,7 @@ def stage_finish(result, title, no_serve):
         command += ["--title", title]
     if no_serve:
         command += ["--no-serve"]
-    run_checked(command, PIPELINE, "STEP 3 (finish)")
+    run_checked(command, REPO, "STEP 3 (finish)")
 
 
 def main():
@@ -202,7 +203,7 @@ def main():
     parser.add_argument("--name", help="scene name (default: the video file name)")
     parser.add_argument("--test", action="store_true", help="run the bundled sample scene with a short training, no video needed")
     parser.add_argument("--check", action="store_true", help="only check the requirements and stop")
-    parser.add_argument("--finish-only", metavar="RESULT_ZIP", help="skip steps 1 and 2: build the website from an existing result zip (no GPU needed, needs the matching STEP 1 data in namma_pipeline/runs)")
+    parser.add_argument("--finish-only", metavar="RESULT_ZIP", help="skip steps 1 and 2: build the website from an existing result zip (no GPU needed, needs the matching STEP 1 data in workspace/runs)")
     parser.add_argument("--steps", type=int, help="training steps (default 30000, or 1000 with --test)")
     parser.add_argument("--profile", default="default", choices=["default", "scalereg", "quality"], help="training profile")
     parser.add_argument("--downscale", type=int, default=1, help="1 = full size images, 2 = half size (less GPU memory)")

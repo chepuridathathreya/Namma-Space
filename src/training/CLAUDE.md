@@ -33,7 +33,7 @@ scripts/check_env.sh               read-only machine check
    - **A/B tests on a bundle that is already unzipped here:** `bash scripts/RUN_AB_TESTS.sh` runs `default quality poseopt flat` at 30000 steps and `fast` at 15000, one after another, as its own user service, and prints one comparison table. Other runs: `bash scripts/RUN_AB_TESTS.sh quality:30000 flat:20000`. A result zip that already exists for a profile is renamed `..._before_<time>.zip`, never overwritten. It also writes `results/<scene>_colmap_sparse.zip` (a copy of the three COLMAP files, for the laptop; `dataset/` is not changed).
    - the script activates `~/miniconda3/envs/namma3dgs` itself, checks the data (including that frames are really in colour), trains, exports, times every stage, and writes `results/<scene>_result.zip`.
 3. Report to Natraj: GPU, peak GPU memory, seconds per stage (from the script's TIME TAKEN table), number of Gaussians if shown, any warnings, and the full path of the result zip.
-4. Natraj carries the zip back to the laptop (`3_PUT_REMOTE_RESULT_HERE`) and runs STEP 3.
+4. Natraj carries the zip back to the laptop (`workspace/from_gpu`) and runs STEP 3.
 
 ## Rules
 

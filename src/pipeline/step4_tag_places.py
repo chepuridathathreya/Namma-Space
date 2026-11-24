@@ -13,8 +13,7 @@ import sys
 import webbrowser
 
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
-PIPELINE_ROOT = os.path.abspath(os.path.join(SCRIPTS_DIR, ".."))
-REPO_ROOT = os.path.abspath(os.path.join(PIPELINE_ROOT, ".."))
+REPO_ROOT = os.path.abspath(os.path.join(SCRIPTS_DIR, "..", ".."))
 BACKUP_DIR = os.path.join(REPO_ROOT, "tmp", "poi_backups")
 sys.path.insert(0, SCRIPTS_DIR)
 from pipeline_common import Stages, StopPipeline
@@ -92,8 +91,8 @@ def load_json(path):
 
 def candidate_sites():
     patterns = [
-        os.path.join(PIPELINE_ROOT, "runs", "*", "site_build", "site"),
-        os.path.join(REPO_ROOT, "[0-9][0-9]_*", "site"),
+        os.path.join(REPO_ROOT, "workspace", "runs", "*", "site_build", "site"),
+        os.path.join(REPO_ROOT, "scenes", "*", "site"),
     ]
     sites = []
     for pattern in patterns:
@@ -127,7 +126,7 @@ def stage_locate(context):
         if not os.path.exists(os.path.join(site, needed)):
             raise StopPipeline(f"{needed} is missing from {site}. Rebuild the site with the current viewer template.")
     if "__save_pois" not in open(os.path.join(site, "poi_editor.js"), encoding="utf-8").read():
-        raise StopPipeline("this site's poi_editor.js has no 'Save to project' button. Copy viewer_template/poi_editor.js into the site.")
+        raise StopPipeline("this site's poi_editor.js has no 'Save to project' button. Copy src/viewer/poi_editor.js into the site.")
     context.update(site=site, grid=load_json(grid_path), poi_path=poi_path, poi_name=poi_name)
     existing = load_json(poi_path)["pois"] if os.path.exists(poi_path) else []
     print(f"   site        : {site}")

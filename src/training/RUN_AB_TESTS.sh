@@ -51,7 +51,7 @@ for run in runs:
     shown = lambda key, digits: f"{float(timing[key]):.{digits}f}" if key in timing else "-"
     print(f" {profile:<10}{steps:>7}{shown('heldout_psnr', 2):>8}{shown('heldout_ssim', 3):>8}{shown('heldout_lpips', 3):>8}{timing.get('gaussians', '-'):>11}{float(timing.get('train_seconds', 0)) / 60:>11.1f}  {path}")
 print()
-print(f" Carry to the laptop folder 3_PUT_REMOTE_RESULT_HERE: every results/{scene}_*_result.zip and results/{scene}_colmap_sparse.zip")
+print(f" Carry to the laptop folder workspace/from_gpu: every results/{scene}_*_result.zip and results/{scene}_colmap_sparse.zip")
 EOF
   echo " finished $(date '+%Y-%m-%d %H:%M:%S')"
   exit 0

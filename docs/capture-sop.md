@@ -61,7 +61,7 @@ A walk shows corners and the top of the walls only briefly. To cover them we too
 
 For the Room we used 26 photos. All 26 were registered by COLMAP.
 
-The photos go in `namma_pipeline/1b_PUT_EXTRA_PHOTOS_HERE/`. The pipeline adds them to the frame set automatically. Empty that folder after each run, or the next scene will pick them up.
+The photos go in `workspace/photos/`. The pipeline adds them to the frame set automatically. Empty that folder after each run, or the next scene will pick them up.
 
 ## 6. Checks before and after processing
 
@@ -111,6 +111,6 @@ What the Techfest portal asks for: a Google Drive folder link, shared as "Anyone
 | Technical abstract PDF, at most 5 pages: system architecture, pipeline design, SOP construction details and technical approach | written from the technical report and this SOP, 4 pages: `submission/abstract/Namma space abstract.pdf` |
 | Proof of concept and web viewer link: a document with a working free-roaming link | a short document containing https://namma-space-documentation.pages.dev/ and https://namma-space.pages.dev/room/ |
 | Demonstration video, 3 to 5 minutes: project scope, capture process and the 3D web walkthrough | narrated demo video, 4 minutes 55 seconds, also embedded on the project page |
-| Code repository: a link or folder with setup instructions to rebuild the model, and sample data in a test directory | the Namma-Space repository, its README and run guide, and `test/sample_scene.zip`; the repository must be viewable by the judges |
+| Code repository: a link or folder with setup instructions to rebuild the model, and sample data in a test directory | the Namma-Space repository, its README and run guide, and `tests/data/sample_scene.zip`; the repository must be viewable by the judges |
 
 Evaluation criteria: SOP and pipeline soundness, visual quality and model fidelity, web viewer performance, and documentation and video clarity.

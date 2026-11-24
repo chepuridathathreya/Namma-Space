@@ -1,6 +1,6 @@
 # How Everything Works - a Beginner's Guide
 
-Last updated: 2026-10-28. This guide assumes you know nothing about 3D reconstruction. It explains the idea, every script, every file type, the website, and how the *old* pipeline worked and why it broke. To run things, see [RUN_GUIDE.md](RUN_GUIDE.md).
+Last updated: 2026-10-28. This guide assumes you know nothing about 3D reconstruction. It explains the idea, every script, every file type, the website, and how the *old* pipeline worked and why it broke. To run things, see [run-guide.md](run-guide.md).
 
 ---
 
@@ -65,7 +65,7 @@ A `.bin` file is just numbers stored compactly. You cannot read it in a text edi
 
 ## 4. How the scripts are launched: .bat, .sh, .py
 
-- **`.bat`** (Windows): a list of terminal commands you can double-click. `STEP1_prepare_video.bat` only says "go to this folder and run `python scripts\step1_prepare.py`", then `pause` so the window stays open to read.
+- **`.bat`** (Windows): a list of terminal commands you can double-click. `scripts/windows/step1_prepare.bat` only says "go to this folder and run `python src/pipeline/step1_prepare.py`", then `pause` so the window stays open to read.
 - **`.sh`** (Linux "bash"): the same idea on Linux. `STEP2_train_on_remote.sh` is run with `bash scripts/STEP2_train_on_remote.sh`. Useful lines to recognise:
   - `set -uo pipefail`: stop on using an unset variable, and report failures inside pipes.
   - `cd "$(dirname "$0")/.."`: go to the folder this script lives in (so it works from anywhere).
@@ -75,18 +75,18 @@ A `.bin` file is just numbers stored compactly. You cannot read it in a text edi
 
 ## 5. STEP 1 on the laptop - what happens inside
 
-You put a video in `namma_pipeline\1_PUT_VIDEO_HERE\` and double-click `STEP1_prepare_video.bat`. The code is `scripts/step1_prepare.py`. It runs six stages and prints how long each took.
+You put a video in `workspace\video\` and double-click `scripts/windows/step1_prepare.bat`. The code is `src/pipeline/step1_prepare.py`. It runs six stages and prints how long each took.
 
 | # | Stage | What it really does | Stops when |
 |---|---|---|---|
 | 1 | check video and tools | finds ffmpeg and COLMAP, reads the video size/duration, shows your GPU, names the scene after the video file | video missing or unreadable |
-| 2 | pick the sharpest colour frame of every time window | `scripts/select_sharp_frames.py`. A phone video has 30 frames a second, but at any moment a few are blurred by hand shake. The script scores **every** frame for sharpness (Laplacian variance, on a small copy so it is fast), splits the video into half-second windows, and keeps the sharpest frame from the middle of each window. Windows where even the best frame is very soft are left out. Then `ffmpeg` extracts only the chosen frames at up to 1920 px wide. It checks the extracted frames match the scored ones, and that they are really in colour. (Old method: `--classic-frames`.) We do not use AI upscaling or deblurring: it invents slightly different detail in each frame, which breaks the agreement between views that COLMAP and training depend on | video too short or too dark, frames do not match the scores, frames are grey |
+| 2 | pick the sharpest colour frame of every time window | `src/pipeline/select_sharp_frames.py`. A phone video has 30 frames a second, but at any moment a few are blurred by hand shake. The script scores **every** frame for sharpness (Laplacian variance, on a small copy so it is fast), splits the video into half-second windows, and keeps the sharpest frame from the middle of each window. Windows where even the best frame is very soft are left out. Then `ffmpeg` extracts only the chosen frames at up to 1920 px wide. It checks the extracted frames match the scored ones, and that they are really in colour. (Old method: `--classic-frames`.) We do not use AI upscaling or deblurring: it invents slightly different detail in each frame, which breaks the agreement between views that COLMAP and training depend on | video too short or too dark, frames do not match the scores, frames are grey |
 | 3 | COLMAP | three sub-steps, each printed live: **feature extraction** (finds corners in every frame), **matching** (links frames that see the same corners; we match each frame with its neighbours in time, which is right for a video), **mapper** (solves all camera positions and 3D points together) | COLMAP itself fails |
 | 4 | health check | counts the registered frames per model. Keeps the biggest model. Warns if fewer than 80% of frames were placed, or if the walk split into two big pieces | under 40% placed, or no model |
 | 5 | floor, scale, collision map | `build_collision_from_colmap.py`: finds the **up direction from the floor** (a plane fitted to the lowest points under your walking path), sets floor = height 0, scales to metres assuming the phone was about 1.4 m high, then builds the floor plan | camera "up" directions disagree (phone was not held upright) |
 | 6 | pack zip for the remote PC | copies the placed frames (full size + half size), the three `.bin` files, `scene.json`, the remote scripts and `REMOTE_NOTES.md`, then zips and tests the zip | the zip fails its integrity check |
 
-At the end it prints a **TIME TAKEN** table and the full path of the zip, which is also copied to `2_SEND_TO_REMOTE\`. Everything printed is also saved to `runs\<scene>\logs\step1.log`.
+At the end it prints a **TIME TAKEN** table and the full path of the zip, which is also copied to `workspace\to_gpu\`. Everything printed is also saved to `runs\<scene>\logs\step1.log`.
 
 **How the collision map is built (stage 6), step by step:**
 1. Up direction and floor: gravity cannot be measured from a video, so we find the floor itself.
@@ -109,7 +109,7 @@ It prints a **TIME TAKEN** table and the path of the result zip. If another user
 
 ## 7. STEP 3 on the laptop - what happens inside
 
-You put the result zip in `3_PUT_REMOTE_RESULT_HERE\` and double-click `STEP3_finish_and_open_website.bat` (code: `scripts/step3_finish.py`, which calls `scripts/finish_scene.py`).
+You put the result zip in `workspace\from_gpu\` and double-click `scripts/windows/step3_finish.bat` (code: `src/pipeline/step3_finish.py`, which calls `src/pipeline/finish_scene.py`).
 
 1. **Find the zip and the matching STEP 1 data.** `scene.json` inside the zip tells it which scene; it then looks for `runs\<scene>\` on the laptop.
 2. **finish_scene.py** does the careful part:
@@ -124,7 +124,7 @@ You put the result zip in `3_PUT_REMOTE_RESULT_HERE\` and double-click `STEP3_fi
 
 ## 8. The website (viewer)
 
-The viewer template lives in `namma_pipeline/viewer_template/` (the live bedroom site in `03_bedroom_early/site/` is left alone) and is copied into every scene's `site/`. It is plain files, no build step:
+The viewer template lives in `src/viewer/` (the live bedroom site in `scenes/bedroom-early/site/` is left alone) and is copied into every scene's `site/`. It is plain files, no build step:
 
 | File | Job |
 |---|---|
@@ -157,7 +157,7 @@ The viewer template lives in `namma_pipeline/viewer_template/` (the live bedroom
 
 ## 10. A tour of one run folder
 
-After STEP 1, `namma_pipeline\runs\<scene>\` contains:
+After STEP 1, `workspace\runs\<scene>\` contains:
 
 ```
 frames\            the sharp colour frames (kept)
@@ -178,7 +178,7 @@ site_build\        (after STEP 3) the .qsplat, a cleaned .ply and the finished s
 
 | You see | Likely cause | Do this |
 |---|---|---|
-| `STOPPED: no video found` | video is not in `1_PUT_VIDEO_HERE` | put it there |
+| `STOPPED: no video found` | video is not in `workspace/video` | put it there |
 | `frames are grayscale` | video or extraction problem | check the video plays in colour |
 | `only N% of frames were placed` | too fast turns, little overlap, plain walls | re-shoot slower, with overlap |
 | WARNING two large models | the walk broke into two pieces (for example two rounds at different angles) | re-shoot one continuous eye-level walk |

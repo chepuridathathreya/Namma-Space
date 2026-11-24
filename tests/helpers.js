@@ -2,12 +2,12 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.resolve(__dirname, "..");
-const VIEWER = path.join(ROOT, "namma_pipeline", "viewer_template");
+const VIEWER = path.join(ROOT, "src", "viewer");
 
 const SCENES = {
-  room: { grid: "01_room/site/assets/room_v1_collision.json" },
-  hallway: { grid: "02_hallway_bedroom/site/assets/hallway_bedroom_v2_collision.json", pois: "02_hallway_bedroom/site/assets/pois.json" },
-  hallway4k: { grid: "04_hallway_bedroom_4k/site/assets/vid_20261114_142211_collision.json", pois: "04_hallway_bedroom_4k/site/assets/pois.json" }
+  room: { grid: "scenes/room/site/assets/room_v1_collision.json" },
+  hallway: { grid: "scenes/hallway-bedroom/site/assets/hallway_bedroom_v2_collision.json", pois: "scenes/hallway-bedroom/site/assets/pois.json" },
+  hallway4k: { grid: "scenes/hallway-bedroom-4k/site/assets/vid_20261114_142211_collision.json", pois: "scenes/hallway-bedroom-4k/site/assets/pois.json" }
 };
 
 function loadGrid(relativePath) {

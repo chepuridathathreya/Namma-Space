@@ -11,7 +11,8 @@ import webbrowser
 import zipfile
 
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
-PIPELINE_ROOT = os.path.abspath(os.path.join(SCRIPTS_DIR, ".."))
+REPO_ROOT = os.path.abspath(os.path.join(SCRIPTS_DIR, "..", ".."))
+WORKSPACE = os.path.join(REPO_ROOT, "workspace")
 sys.path.insert(0, SCRIPTS_DIR)
 from pipeline_common import Stages, StopPipeline, Tee, run_live
 
@@ -26,7 +27,7 @@ class QuietHandler(http.server.SimpleHTTPRequestHandler):
 
 
 def stage_locate(context):
-    inbox = os.path.join(PIPELINE_ROOT, "3_PUT_REMOTE_RESULT_HERE")
+    inbox = os.path.join(WORKSPACE, "from_gpu")
     archives = glob.glob(os.path.join(inbox, "*.zip"))
     if context["args"].result:
         archives = [context["args"].result]
@@ -44,7 +45,7 @@ def stage_locate(context):
             print("   remote timing:")
             for line in archive.read("timing.txt").decode().splitlines():
                 print("      " + line)
-    run_dir = os.path.join(PIPELINE_ROOT, "runs", scene)
+    run_dir = os.path.join(WORKSPACE, "runs", scene)
     required = [
         os.path.join(run_dir, "world", "world.json"),
         os.path.join(run_dir, "world", f"{scene}_collision.json"),
@@ -115,7 +116,7 @@ def stage_serve(context):
 
 def main():
     parser = argparse.ArgumentParser(description="NammaSpace STEP 3: remote 3DGS result -> aligned splat + collision -> local website")
-    parser.add_argument("--result", help="result zip (default: newest zip in 3_PUT_REMOTE_RESULT_HERE)")
+    parser.add_argument("--result", help="result zip (default: newest zip in workspace/from_gpu)")
     parser.add_argument("--title", help="title shown on the website")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--smooth-floor", type=float, default=0.0, help="0 to 1: calm the colour of shiny floor gaussians (off by default)")

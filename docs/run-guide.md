@@ -1,6 +1,6 @@
 # How to Run the Pipeline
 
-Last updated: 2026-10-28. How each script works is in [HOW_IT_WORKS.md](HOW_IT_WORKS.md). This page is only the commands.
+Last updated: 2026-10-28. How each script works is in [how-it-works.md](how-it-works.md). This page is only the commands.
 
 For a picture of the whole flow and the two setups, see the diagrams in the [README](../README.md#how-it-works).
 
@@ -20,7 +20,7 @@ There are two ways to run it. **Option A, one computer, is the recommended way a
 | Tools on PATH | `ffmpeg`, `ffprobe`, COLMAP 3.9 or newer, `ns-train` and `ns-export` (nerfstudio) |
 | Python | 3.11 recommended, with `pip install -r requirements.txt` and, for training, `pip install -r requirements-train.txt` after installing PyTorch for your CUDA version |
 
-The full table, measured GPU memory and why each item is needed are in [HARDWARE_AND_REMOTE_SETUP.md](HARDWARE_AND_REMOTE_SETUP.md).
+The full table, measured GPU memory and why each item is needed are in [hardware.md](hardware.md).
 
 ### Check the machine first
 
@@ -36,7 +36,7 @@ It lists every requirement as `ok` or `MISSING` with the fix for each one, and s
 python run_all.py --test
 ```
 
-This uses a small sample scene in `test/sample_scene.zip` (40 frames with the camera model and collision map already solved), trains for 1,000 steps instead of 30,000, and builds the website. It runs through all three stages in minutes and opens the result at http://localhost:8765/. The sample splat is rough on purpose: it proves the chain works on your machine, not the final quality.
+This uses a small sample scene in `tests/data/sample_scene.zip` (40 frames with the camera model and collision map already solved), trains for 1,000 steps instead of 30,000, and builds the website. It runs through all three stages in minutes and opens the result at http://localhost:8765/. The sample splat is rough on purpose: it proves the chain works on your machine, not the final quality.
 
 ### Run on your own video
 
@@ -84,13 +84,13 @@ Use this if your laptop cannot train but you have access to a GPU PC. Parts 1 an
 
 **Laptop** needs: Python 3 with `numpy scipy opencv-python Pillow`, `ffmpeg`, and COLMAP (on PATH, or at `D:\Tools\COLMAP`).
 
-**Remote PC** needs: a conda environment named `namma3dgs` with the packages from `requirements-train.txt` (see [HARDWARE_AND_REMOTE_SETUP.md](HARDWARE_AND_REMOTE_SETUP.md)) and the file `RUN_NEW_BUNDLE.sh` saved in its workspace folder. That file is in this repo at `namma_pipeline/remote/RUN_NEW_BUNDLE.sh`. Put it on the remote PC once; it takes any bundle zip and does everything.
+**Remote PC** needs: a conda environment named `namma3dgs` with the packages from `requirements-train.txt` (see [hardware.md](hardware.md)) and the file `RUN_NEW_BUNDLE.sh` saved in its workspace folder. That file is in this repo at `src/training/RUN_NEW_BUNDLE.sh`. Put it on the remote PC once; it takes any bundle zip and does everything.
 
 ---
 
 ## Step 0 - Film the video
 
-- Follow the tested settings in `docs/CAPTURE_SOP.md` (Room scene: landscape, 1080p at 30 fps, Pro mode, manual focus, 1/100 s, ISO 800, 5000 K, EV 0). Phone at chest or eye height, tilted slightly down. 4K at 30 fps is an untested recommendation for sharper frames after downscaling; the hallway v3 capture used it, but no held-out score exists yet. Keep disk free: a 7-minute 4K video is 3-4 GB.
+- Follow the tested settings in `docs/capture-sop.md` (Room scene: landscape, 1080p at 30 fps, Pro mode, manual focus, 1/100 s, ISO 800, 5000 K, EV 0). Phone at chest or eye height, tilted slightly down. 4K at 30 fps is an untested recommendation for sharper frames after downscaling; the hallway v3 capture used it, but no held-out score exists yet. Keep disk free: a 7-minute 4K video is 3-4 GB.
 - Switch off bright ceiling lamps and close curtains where you can: glossy floors and wardrobes reflect them, and a splat can only fake a reflection with ghost copies.
 - **One continuous walk at the same height and angle.** Never raise the phone toward the ceiling for a second lap; that bent v1.
 - Walk slowly (about half a metre a second), turn slowly. Keep about 1 m from walls. Do not fill the frame with a plain wall or curtain.
@@ -98,7 +98,7 @@ Use this if your laptop cannot train but you have access to a GPU PC. Parts 1 an
 
 ## Step 0b - Optional extra photos
 
-Corners and places the walk shows only briefly can be helped with 20-40 photos. Put them in `namma_pipeline\1b_PUT_EXTRA_PHOTOS_HERE\`. STEP 1 adds them automatically and matches each one against every video frame, so a photo does not need to follow the walk; it only needs to show things the video also shows.
+Corners and places the walk shows only briefly can be helped with 20-40 photos. Put them in `workspace\photos\`. STEP 1 adds them automatically and matches each one against every video frame, so a photo does not need to follow the walk; it only needs to show things the video also shows.
 
 - Same phone, same lens and same Pro settings as the video (the Room used the 0.6x ultra-wide for both), landscape, same lights. Never switch lenses partway through.
 - 2-3 photos per corner, each a step apart, at eye height and tilted up.
@@ -106,9 +106,9 @@ Corners and places the walk shows only briefly can be helped with 20-40 photos. 
 
 ## Step 1 - Laptop: prepare (measured: 87 minutes for a 7-minute video at 883 frames; use `--window 1` for about half the frames and a much faster COLMAP)
 
-1. Copy **one** video file into `namma_pipeline\1_PUT_VIDEO_HERE\`.
+1. Copy **one** video file into `workspace\video\`.
    The scene is named after the file, so use a clean name with letters, numbers and underscores, for example `hallway_bedroom_v2.mp4`.
-2. Double-click **`STEP1_prepare_video.bat`**. A black window opens. Leave it open.
+2. Double-click **`scripts/windows/step1_prepare.bat`**. A black window opens. Leave it open.
 3. Watch it. It prints six stages and the time each took:
 
    | Stage | What you will see |
@@ -123,13 +123,13 @@ Corners and places the walk shows only briefly can be helped with 20-40 photos. 
 4. **It worked** when you see `STEP 1 FINISHED`, a TIME TAKEN table and a line `ZIP TO SEND : ...`.
    - Good: frames placed 80% or more; no warning about a second large model.
    - If you see `STOPPED:`, read the message. The usual causes are in the table at the end of this page.
-5. The zip is in `namma_pipeline\2_SEND_TO_REMOTE\`, named `<scene>_to_remote.zip`. A full log is in `namma_pipeline\runs\<scene>\logs\step1.log`.
+5. The zip is in `workspace\to_gpu\`, named `<scene>_to_remote.zip`. A full log is in `workspace\runs\<scene>\logs\step1.log`.
 
 **You can stop here to test only the laptop side.** No remote PC is needed to check that STEP 1 works.
 
 ## Step 2 - Carry the zip to the remote PC
 
-Copy the zip from `2_SEND_TO_REMOTE` to the remote PC any way that works: Google Drive, a GitHub release, a USB drive. Note the path where it lands, for example `~/Downloads/hallway_bedroom_v2_to_remote.zip`.
+Copy the zip from `workspace/to_gpu` to the remote PC any way that works: Google Drive, a GitHub release, a USB drive. Note the path where it lands, for example `~/Downloads/hallway_bedroom_v2_to_remote.zip`.
 
 ## Step 3 - Remote PC: train (about 12-16 minutes)
 
@@ -151,11 +151,11 @@ Optional settings: `bash RUN_NEW_BUNDLE.sh <zip> [steps] [downscale] [cache] [pr
 
 ## Step 4 - Carry the result zip back
 
-Copy `<scene>_result.zip` from the remote PC to the laptop folder `namma_pipeline\3_PUT_REMOTE_RESULT_HERE\`. Keep **only one** zip there (STEP 3 uses the newest).
+Copy `<scene>_result.zip` from the remote PC to the laptop folder `workspace\from_gpu\`. Keep **only one** zip there (STEP 3 uses the newest).
 
 ## Step 5 - Laptop: finish and open the website (about 10 seconds)
 
-1. Double-click **`STEP3_finish_and_open_website.bat`**.
+1. Double-click **`scripts/windows/step3_finish.bat`**.
 2. It finds the matching STEP 1 data, lines the splat up with the collision map and checks it, then cleans it (deletes mirror ghosts under the floor, sorts splats best-first), builds a walkable map from the splat as well as the camera path, builds the website, and prints:
    ```
    OPEN THIS LINK:  http://localhost:8765/
@@ -172,26 +172,26 @@ Copy `<scene>_result.zip` from the remote PC to the laptop folder `namma_pipelin
 
 ## Step 6 - Afterwards
 
-- The finished website files are in `namma_pipeline\runs\<scene>\site_build\site\`.
-- When you are happy, move what you want to keep into the numbered project folder (for example `02_hallway_bedroom\`). Move the result zip out of `3_PUT_REMOTE_RESULT_HERE` so the next run starts clean.
+- The finished website files are in `workspace\runs\<scene>\site_build\site\`.
+- When you are happy, move what you want to keep into its scene folder (for example `scenes\hallway-bedroom\`). Move the result zip out of `workspace/from_gpu` so the next run starts clean.
 - Uploading to Cloudflare is a separate step, not part of these three clicks yet.
 
 ---
 
 ## Running without the cloud (testing only the laptop side)
 
-Do steps 0 and 1 only. Success criteria: `STEP 1 FINISHED`, frames placed 80% or more, a TIME TAKEN table, a zip in `2_SEND_TO_REMOTE`, and a collision map. To look at the map, open `namma_pipeline\runs\<scene>\world\<scene>_collision_preview.png` (green = walkable, red = obstacle, yellow = your path, blue = start). STEP 3 cannot run without a trained result.
+Do steps 0 and 1 only. Success criteria: `STEP 1 FINISHED`, frames placed 80% or more, a TIME TAKEN table, a zip in `workspace/to_gpu`, and a collision map. To look at the map, open `workspace\runs\<scene>\world\<scene>_collision_preview.png` (green = walkable, red = obstacle, yellow = your path, blue = start). STEP 3 cannot run without a trained result.
 
 ## If something stops
 
 | Message | Meaning | Do this |
 |---|---|---|
-| `no video found` | the folder is empty | put the video in `1_PUT_VIDEO_HERE` |
+| `no video found` | the folder is empty | put the video in `workspace/video` |
 | `frames are grayscale` | colour was lost | check the video plays in colour |
 | `only N% of frames were placed` | COLMAP could not follow the walk | re-shoot slower, farther from walls; or use `--window 0.33` for more frames |
 | WARNING two large models | the walk broke into two pieces | re-shoot one continuous walk |
 | `camera up directions disagree` | phone was not upright | hold it upright and landscape |
-| remote: `STOPPED: this zip is not a NammaSpace bundle` | wrong zip | use the zip from `2_SEND_TO_REMOTE` |
+| remote: `STOPPED: this zip is not a NammaSpace bundle` | wrong zip | use the zip from `workspace/to_gpu` |
 | remote: `NO RESULT ZIP WAS PRODUCED` | training stopped | read the last lines above it and the log in `bundles/<scene>_<date>/logs/` |
 | STEP 3: `does not line up` | the result is from a different bundle | use the result for the same scene |
 | STEP 3: `missing ... runs\<scene>` | STEP 1 data for that scene is not on this laptop | run STEP 1 again for that video |
@@ -201,9 +201,8 @@ Do steps 0 and 1 only. Success criteria: `STEP 1 FINISHED`, frames placed 80% or
 Double-clicking runs with the defaults. To pass options, open a terminal and run, for example:
 
 ```
-cd namma_pipeline
-STEP1_prepare_video.bat --window 1
-STEP1_prepare_video.bat --classic-frames --fps 2
-STEP1_prepare_video.bat --name my_scene --video "D:\videos\walk.mp4"
-STEP3_finish_and_open_website.bat --title "My Scene" --port 8800
+scripts\windows\step1_prepare.bat --window 1
+scripts\windows\step1_prepare.bat --classic-frames --fps 2
+scripts\windows\step1_prepare.bat --name my_scene --video "D:\videos\walk.mp4"
+scripts\windows\step3_finish.bat --title "My Scene" --port 8800
 ```

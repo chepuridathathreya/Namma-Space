@@ -15,13 +15,14 @@ import cv2
 import numpy as np
 from PIL import Image, ImageOps
 
-PIPELINE_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-SCRIPTS_DIR = os.path.join(PIPELINE_ROOT, "scripts")
-REMOTE_DIR = os.path.join(PIPELINE_ROOT, "remote")
+SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.abspath(os.path.join(SCRIPTS_DIR, "..", ".."))
+WORKSPACE = os.path.join(REPO_ROOT, "workspace")
+REMOTE_DIR = os.path.join(REPO_ROOT, "src", "training")
 VIDEO_EXTENSIONS = (".mp4", ".mov", ".mkv", ".avi", ".m4v")
 STORED_EXTENSIONS = (".jpg", ".jpeg", ".png")
 PHOTO_EXTENSIONS = (".jpg", ".jpeg", ".png", ".heic")
-PHOTOS_INBOX = os.path.join(PIPELINE_ROOT, "1b_PUT_EXTRA_PHOTOS_HERE")
+PHOTOS_INBOX = os.path.join(WORKSPACE, "photos")
 
 sys.path.insert(0, SCRIPTS_DIR)
 from build_collision_from_colmap import read_images
@@ -91,7 +92,7 @@ def stage_check_inputs(context):
     context["colmap"] = direct_exe if os.path.isfile(direct_exe) else find_tool("colmap", [])
     print(f"   ffmpeg : {context['ffmpeg']}")
     print(f"   colmap : {context['colmap']}")
-    video = arguments.video or newest_video(os.path.join(PIPELINE_ROOT, "1_PUT_VIDEO_HERE"))
+    video = arguments.video or newest_video(os.path.join(WORKSPACE, "video"))
     if not os.path.isfile(video):
         raise StopPipeline(f"video not found: {video}")
     context["video"] = video
@@ -106,7 +107,7 @@ def stage_check_inputs(context):
     gpu = subprocess.run(["nvidia-smi", "--query-gpu=name,memory.total", "--format=csv,noheader"], capture_output=True, text=True)
     print(f"   GPU    : {gpu.stdout.strip() or 'nvidia-smi not available'}")
     name = arguments.name or re.sub(r"[^A-Za-z0-9_]+", "_", os.path.splitext(os.path.basename(video))[0]).strip("_").lower()
-    runs_root = os.path.join(PIPELINE_ROOT, "runs")
+    runs_root = os.path.join(WORKSPACE, "runs")
     run_dir, suffix = os.path.join(runs_root, name), 1
     while os.path.exists(run_dir):
         suffix += 1
@@ -388,7 +389,7 @@ def stage_pack_for_remote(context):
     run_zip = os.path.join(context["run_dir"], "bundle", zip_name)
     print(f"   zipping {len(names)} frames + camera model ...", flush=True)
     pack_zip(run_zip, stage_root, f"{name}_to_remote")
-    outbox = os.path.join(PIPELINE_ROOT, "2_SEND_TO_REMOTE")
+    outbox = os.path.join(WORKSPACE, "to_gpu")
     os.makedirs(outbox, exist_ok=True)
     final_zip = os.path.join(outbox, zip_name)
     shutil.copyfile(run_zip, final_zip)
@@ -398,7 +399,7 @@ def stage_pack_for_remote(context):
 
 def main():
     parser = argparse.ArgumentParser(description="NammaSpace STEP 1: video -> frames -> COLMAP -> collision map -> zip for the remote GPU PC")
-    parser.add_argument("--video", help="video file (default: newest video in 1_PUT_VIDEO_HERE)")
+    parser.add_argument("--video", help="video file (default: newest video in workspace/video)")
     parser.add_argument("--name", help="scene name (default: the video file name)")
     parser.add_argument("--fps", type=float, default=2.0, help="frames per second to extract")
     parser.add_argument("--window", type=float, default=0.5, help="seconds per window; the sharpest frame of each window is kept (1 = half as many frames, much faster COLMAP)")
@@ -407,7 +408,7 @@ def main():
     parser.add_argument("--blur-threshold", type=float, default=35.0)
     parser.add_argument("--max-frames", type=int, default=0, help="0 = keep every placed frame (best quality)")
     parser.add_argument("--camera-height", type=float, default=1.4, help="phone height above the floor in metres")
-    parser.add_argument("--photos", help="folder of extra photos to add (default: 1b_PUT_EXTRA_PHOTOS_HERE, used only if it has photos)")
+    parser.add_argument("--photos", help="folder of extra photos to add (default: workspace/photos, used only if it has photos)")
     parser.add_argument("--global-mapper", action="store_true", help="use COLMAP's global mapper instead of the incremental mapper (faster; test it against the default)")
     arguments = parser.parse_args()
 
@@ -449,7 +450,7 @@ def main():
     print("")
     print("  NEXT: copy that zip to the remote GPU PC, unzip it, and run")
     print("        bash scripts/STEP2_train_on_remote.sh")
-    print("        Then bring the result zip back into 3_PUT_REMOTE_RESULT_HERE and run STEP 3.")
+    print("        Then bring the result zip back into workspace/from_gpu and run STEP 3.")
     summary = {"scene": context["name"], "seconds": {title: round(seconds, 1) for title, seconds, _ in stages.rows}, "zip": context["final_zip"]}
     json.dump(summary, open(os.path.join(context["run_dir"], "logs", "step1_summary.json"), "w"), indent=2)
     if log_handle:

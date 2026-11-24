@@ -108,7 +108,7 @@ def main():
     ap.add_argument("--max-scale-m", type=float, default=1.0, help="drop gaussians larger than this (m)")
     ap.add_argument("--max-dist-m", type=float, default=1.2, help="drop gaussians farther than this from any COLMAP point (m)")
     ap.add_argument("--fit-limit-m", type=float, default=0.4, help="STOP if median splat-to-points distance exceeds this (m)")
-    ap.add_argument("--viewer-template", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "viewer_template"))
+    ap.add_argument("--viewer-template", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "viewer"))
     ap.add_argument("--title", default=None)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
