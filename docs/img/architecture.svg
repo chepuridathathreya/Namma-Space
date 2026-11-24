@@ -105,12 +105,12 @@ text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 <rect class="card" width="1228" height="176" rx="10"/><rect class="k5" width="1228" height="4" rx="2"/>
 <text class="chip k5" x="16" y="30">OUTPUT</text>
 <text class="title" x="16" y="56">Web viewer</text>
-<text class="meta" x="150" y="56">Static site on Cloudflare Pages · own WebGL2 renderer · nothing to install</text>
+<text class="meta" x="150" y="56">Static site on Cloudflare Pages · Spark splat renderer · nothing to install</text>
 <g transform="translate(16,76)">
 <rect class="cell" width="287" height="84" rx="8"/>
 <text class="ctitle" x="14" y="28">Render</text>
-<text class="cbody" x="14" y="50">Gaussians sorted back to front</text>
-<text class="cbody" x="14" y="68">Detail drops if fps is low</text>
+<text class="cbody" x="14" y="50">Full colour, sorted by Spark</text>
+<text class="cbody" x="14" y="68">Resolution drops if fps is low</text>
 </g>
 <g transform="translate(319,76)">
 <rect class="cell" width="287" height="84" rx="8"/>

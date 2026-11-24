@@ -164,7 +164,7 @@ Copy `<scene>_result.zip` from the remote PC to the laptop folder `workspace\fro
 3. Click the scene, then **W A S D** to walk, mouse to look, **Shift** to run, **M** to show the collision grid, **R** to go back to the start. The top-right number is your FPS.
 4. Press **Ctrl+C** in the black window to stop the website.
 
-**Detail buttons:** 250k, 500k and All set how many splats are drawn. The file is sorted best-first, so 250k keeps the best 250,000.
+**Detail buttons:** 60%, 80% and Full set the render resolution. All splats are always drawn. On a slow GPU the viewer lowers the resolution by itself and says so.
 
 **Slow in your browser?** Add `?debug` to the end of the address (for example `http://localhost:8765/?debug`). A panel appears showing which GPU the browser really uses, the canvas size, the frame time, the JavaScript time per frame and the sort delay. Send a screenshot of it. On the dev laptop's RTX 3060 the viewer measured about 175 FPS with all splats at 1600x900, so a much lower number points at the browser or Windows, not at the scene.
 

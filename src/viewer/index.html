@@ -199,9 +199,9 @@ html.embed #dock { width: min(440px, calc(100% - 128px)); padding-bottom: var(--
     </div>
     <div class="field"><span id="detailLabel">Detail</span>
       <div class="seg" id="detail" role="group" aria-labelledby="detailLabel">
-        <button type="button" data-detail="250000" aria-pressed="false">250k</button>
-        <button type="button" data-detail="500000" aria-pressed="false">500k</button>
-        <button type="button" data-detail="1000000" aria-pressed="true">All</button>
+        <button type="button" data-scale="0.6" aria-pressed="false">60%</button>
+        <button type="button" data-scale="0.8" aria-pressed="false">80%</button>
+        <button type="button" data-scale="1" aria-pressed="true">Full</button>
       </div>
     </div>
     <div class="field"><span id="mapsLabel">Maps</span>
@@ -236,11 +236,13 @@ html.embed #dock { width: min(440px, calc(100% - 128px)); padding-bottom: var(--
 
 <div id="loading"><div class="ld"><p class="ldbrand">NammaSpace</p><p id="loadmsg">Loading scene</p><div id="bar"><i id="barfill"></i></div><p id="loadpct">0%</p><p id="err" hidden></p></div></div>
 
-<script src="vendor/three.min.js"></script>
-<script src="nav.js?v=20261124b"></script>
-<script src="poi.js?v=20261124b"></script>
-<script src="poi_ui.js?v=20261124b"></script>
-<script src="poi_editor.js?v=20261124b"></script>
-<script src="main.js?v=20261124b"></script>
+<script type="importmap">
+{ "imports": {
+  "three": "./vendor/three.module.js",
+  "three/addons/": "./vendor/three-addons/",
+  "@sparkjsdev/spark": "./vendor/spark.module.js"
+} }
+</script>
+<script type="module" src="boot.js?v=20261125a"></script>
 </body>
 </html>

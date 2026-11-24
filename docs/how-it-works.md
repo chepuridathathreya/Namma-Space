@@ -185,7 +185,7 @@ site_build\        (after STEP 3) the .qsplat, a cleaned .ply and the finished s
 | `camera up directions disagree` | phone held sideways/upside-down for long | hold it upright, landscape |
 | STEP 3: `does not line up` | wrong or mismatched result zip | make sure the zip is from the same bundle |
 | website is grey | training images were grey | STEP 2 would have stopped; check the frames |
-| website very slow | too many Gaussians for the laptop GPU | use the 250k/500k buttons; later: lower the budget |
+| website very slow | the laptop GPU cannot draw every Gaussian at full resolution | choose 60% or 80% under Settings > Detail |
 | remote: `ns-train not found` | environment not activated | the script tries `namma3dgs` |
 | remote: GPU slow | another user is using it | report it; wait or retry |
 

@@ -6,7 +6,6 @@
   var MAX_STEP = 0.05;
   var JUMP_SPEED = 2.7;
   var GRAVITY = 6.5;
-  var TEX_W = 1024;
   var q = new URLSearchParams(location.search);
   var embedMode = q.has("embed");
 
@@ -15,9 +14,11 @@
   var perfOn = /[?&]debug/.test(location.search), perfEl = document.getElementById("dbg"), perf = { sorts: 0, sortMs: 0, sortSent: 0, jsMs: 0, lastNow: 0, worstGap: 0 }, perfGpu = "unknown";
   (function () { var g = renderer.getContext(), x = g.getExtension("WEBGL_debug_renderer_info"); if (x) perfGpu = g.getParameter(x.UNMASKED_RENDERER_WEBGL); })();
   if (perfOn) perfEl.hidden = false;
-  if (!renderer.capabilities.isWebGL2) { fail("This viewer needs WebGL2."); return; }
+  if (!(renderer.getContext() instanceof WebGL2RenderingContext)) { fail("This viewer needs WebGL2."); return; }
   renderer.setClearColor(0x181A19, 1);
   var scene = new THREE.Scene();
+  var spark = new Spark.SparkRenderer({ renderer: renderer, preBlurAmount: 0.3, blurAmount: 0 });
+  scene.add(spark);
   var camera = new THREE.PerspectiveCamera(70, 1, 0.05, 200);
   camera.rotation.order = "YXZ";
 
@@ -37,53 +38,8 @@
     if (msg) document.getElementById("loadmsg").textContent = msg;
   }
 
-  var VERT = [
-    "precision highp float; precision highp int; precision highp sampler2D;",
-    "uniform sampler2D tA; uniform sampler2D tB; uniform sampler2D tC; uniform sampler2D tD;",
-    "uniform mat4 uView; uniform mat4 uProj; uniform vec2 uViewport;",
-    "in vec2 position; in float idx;",
-    "out vec4 vColor; out vec2 vPos;",
-    "void main() {",
-    "  int i = int(idx + 0.5);",
-    "  ivec2 tc = ivec2(i & " + (TEX_W - 1) + ", i >> 10);",
-    "  vec4 A = texelFetch(tA, tc, 0); vec4 B = texelFetch(tB, tc, 0); vec4 C = texelFetch(tC, tc, 0); vec4 D = texelFetch(tD, tc, 0);",
-    "  vec4 vc = uView * vec4(A.xyz, 1.0);",
-    "  vec4 clip = uProj * vc;",
-    "  float zc = -vc.z;",
-    "  if (zc < 0.05 || abs(clip.x) > 1.3 * clip.w || abs(clip.y) > 1.3 * clip.w) { gl_Position = vec4(0.0, 0.0, 2.0, 1.0); return; }",
-    "  float fx = uProj[0][0] * uViewport.x * 0.5; float fy = uProj[1][1] * uViewport.y * 0.5;",
-    "  float vx = clamp(vc.x / zc, -1.3 / uProj[0][0], 1.3 / uProj[0][0]) * zc;",
-    "  float vy = clamp(vc.y / zc, -1.3 / uProj[1][1], 1.3 / uProj[1][1]) * zc;",
-    "  mat3 J = mat3(vec3(fx / zc, 0.0, 0.0), vec3(0.0, fy / zc, 0.0), vec3(fx * vx / (zc * zc), fy * vy / (zc * zc), 0.0));",
-    "  mat3 Vrk = mat3(B.x, B.y, B.z, B.y, B.w, C.x, B.z, C.x, C.y);",
-    "  mat3 T = J * mat3(uView);",
-    "  mat3 cov = T * Vrk * transpose(T);",
-    "  float c00 = cov[0][0] + 0.3; float c11 = cov[1][1] + 0.3; float c01 = cov[1][0];",
-    "  float mid = 0.5 * (c00 + c11); float rad = length(vec2(0.5 * (c00 - c11), c01));",
-    "  float l1 = mid + rad; float l2 = max(mid - rad, 0.05);",
-    "  vec2 ev = vec2(c01, l1 - c00); float evl = length(ev);",
-    "  vec2 e1 = vec2(1.0, 0.0);",
-    "  if (evl > 1e-6) { e1 = ev / evl; } else if (c11 > c00) { e1 = vec2(0.0, 1.0); }",
-    "  vec2 e2 = vec2(-e1.y, e1.x);",
-    "  float s1 = min(sqrt(l1), 300.0); float s2 = min(sqrt(l2), 300.0);",
-    "  vec2 pix = position.x * 3.0 * s1 * e1 + position.y * 3.0 * s2 * e2;",
-    "  vColor = D; vPos = position * 3.0;",
-    "  gl_Position = vec4(clip.xy / clip.w + pix * 2.0 / uViewport, 0.0, 1.0);",
-    "}"
-  ].join("\n");
-  var FRAG = [
-    "precision highp float;",
-    "in vec4 vColor; in vec2 vPos; out vec4 outColor;",
-    "void main() {",
-    "  float r2 = dot(vPos, vPos);",
-    "  if (r2 > 9.0) discard;",
-    "  float a = vColor.a * exp(-0.5 * r2);",
-    "  if (a < 0.004) discard;",
-    "  outColor = vec4(vColor.rgb, a);",
-    "}"
-  ].join("\n");
 
-  var splatMesh = null, worker = null, sortPending = false, lastSortKey = "", total = 0, limit = 0;
+  var splatMesh = null, splatMeshes = [], total = 0, splatXYZ = null, splatRGBA = null, colourMode = "base";
   var surface = null, wire = null, gridFloor = null, gridOutline = null, gridOccupied = null;
   var mode = q.get("mode") === "mesh" ? "mesh" : "splat";
   var debugOn = q.get("debug") === "1";
@@ -123,65 +79,61 @@
     return new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer().then(expandQ);
   }
 
+  function poiArrays(n) { splatXYZ = new Float32Array(n * 4); splatRGBA = new Uint8Array(n * 4); }
+
   function buildSplats(buf) {
-    var n = buf.byteLength / 32, g = 0;
-    total = n;
-    var rows = Math.ceil(n / TEX_W), size = TEX_W * rows;
-    var A = new Float32Array(size * 4), B = new Float32Array(size * 4), C = new Float32Array(size * 4), D = new Uint8Array(size * 4);
-    var pos = new Float32Array(n * 3), k = 0;
-    var f = new Float32Array(buf), u = new Uint8Array(buf);
-    for (var j = 0; j < n; j++, g++) {
-      var o = j * 8, x = f[o], y = f[o + 1], z = f[o + 2], sx = f[o + 3], sy = f[o + 4], sz = f[o + 5], b = j * 32;
-      var w = (u[b + 28] - 128) / 128, qx = (u[b + 29] - 128) / 128, qy = (u[b + 30] - 128) / 128, qz = (u[b + 31] - 128) / 128;
-      var nn = Math.sqrt(w * w + qx * qx + qy * qy + qz * qz) || 1; w /= nn; qx /= nn; qy /= nn; qz /= nn;
-      var r00 = 1 - 2 * (qy * qy + qz * qz), r01 = 2 * (qx * qy - w * qz), r02 = 2 * (qx * qz + w * qy);
-      var r10 = 2 * (qx * qy + w * qz), r11 = 1 - 2 * (qx * qx + qz * qz), r12 = 2 * (qy * qz - w * qx);
-      var r20 = 2 * (qx * qz - w * qy), r21 = 2 * (qy * qz + w * qx), r22 = 1 - 2 * (qx * qx + qy * qy);
-      var a2 = sx * sx, b2 = sy * sy, c2 = sz * sz, t = k * 4;
-      A[t] = x; A[t + 1] = y; A[t + 2] = z;
-      B[t] = r00 * r00 * a2 + r01 * r01 * b2 + r02 * r02 * c2;
-      B[t + 1] = r00 * r10 * a2 + r01 * r11 * b2 + r02 * r12 * c2;
-      B[t + 2] = r00 * r20 * a2 + r01 * r21 * b2 + r02 * r22 * c2;
-      B[t + 3] = r10 * r10 * a2 + r11 * r11 * b2 + r12 * r12 * c2;
-      C[t] = r10 * r20 * a2 + r11 * r21 * b2 + r12 * r22 * c2;
-      C[t + 1] = r20 * r20 * a2 + r21 * r21 * b2 + r22 * r22 * c2;
-      D[t] = u[b + 24]; D[t + 1] = u[b + 25]; D[t + 2] = u[b + 26]; D[t + 3] = u[b + 27];
-      pos[k * 3] = x; pos[k * 3 + 1] = y; pos[k * 3 + 2] = z; k++;
+    var n = buf.byteLength / 32, f = new Float32Array(buf), u = new Uint8Array(buf);
+    var c = new THREE.Vector3(), s = new THREE.Vector3(), r = new THREE.Quaternion(), col = new THREE.Color();
+    var packed = new Spark.PackedSplats({ maxSplats: n });
+    total = n; poiArrays(n);
+    for (var j = 0; j < n; j++) {
+      var o = j * 8, b = j * 32, t = j * 4;
+      c.set(f[o], f[o + 1], f[o + 2]); s.set(f[o + 3], f[o + 4], f[o + 5]);
+      r.set((u[b + 29] - 128) / 128, (u[b + 30] - 128) / 128, (u[b + 31] - 128) / 128, (u[b + 28] - 128) / 128).normalize();
+      col.setRGB(u[b + 24] / 255, u[b + 25] / 255, u[b + 26] / 255);
+      packed.pushSplat(c, s, r, u[b + 27] / 255, col);
+      splatXYZ[t] = f[o]; splatXYZ[t + 1] = f[o + 1]; splatXYZ[t + 2] = f[o + 2];
+      splatRGBA[t] = u[b + 24]; splatRGBA[t + 1] = u[b + 25]; splatRGBA[t + 2] = u[b + 26]; splatRGBA[t + 3] = u[b + 27];
     }
-    function tex(data, type) {
-      var t = new THREE.DataTexture(data, TEX_W, rows, THREE.RGBAFormat, type);
-      t.minFilter = THREE.NearestFilter; t.magFilter = THREE.NearestFilter; t.generateMipmaps = false; t.needsUpdate = true; return t;
-    }
-    var geo = new THREE.InstancedBufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array([-1, -1, 1, -1, 1, 1, -1, 1]), 2));
-    geo.setIndex([0, 1, 2, 0, 2, 3]);
-    var idx = new THREE.InstancedBufferAttribute(new Float32Array(n), 1); idx.setUsage(THREE.DynamicDrawUsage);
-    for (var i = 0; i < n; i++) idx.array[i] = i;
-    geo.setAttribute("idx", idx); geo.instanceCount = n;
-    var mat = new THREE.RawShaderMaterial({
-      glslVersion: THREE.GLSL3, vertexShader: VERT, fragmentShader: FRAG, transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
-      uniforms: {
-        tA: { value: tex(A, THREE.FloatType) }, tB: { value: tex(B, THREE.FloatType) }, tC: { value: tex(C, THREE.FloatType) }, tD: { value: tex(D, THREE.UnsignedByteType) },
-        uView: { value: new THREE.Matrix4() }, uProj: { value: new THREE.Matrix4() }, uViewport: { value: new THREE.Vector2(1, 1) }
-      }
-    });
-    splatMesh = new THREE.Mesh(geo, mat); splatMesh.frustumCulled = false; splatMesh.renderOrder = 0;
+    splatMesh = new Spark.SplatMesh({ packedSplats: packed });
+    splatMeshes = [splatMesh];
     scene.add(splatMesh);
-    var src = "var pos,n,out,keys;onmessage=function(e){var d=e.data;if(d.pos){pos=new Float32Array(d.pos);n=pos.length/3;keys=new Uint16Array(n);return;}" +
-      "var m=d.row,a=m[0],b=m[1],c=m[2],dd=m[3],mn=1e30,mx=-1e30,i,z,n=Math.min(d.lim||pos.length/3,pos.length/3);var zs=new Float32Array(n);" +
-      "for(i=0;i<n;i++){z=a*pos[3*i]+b*pos[3*i+1]+c*pos[3*i+2]+dd;zs[i]=z;if(z<mn)mn=z;if(z>mx)mx=z;}" +
-      "var sc=65535/(mx-mn||1),cnt=new Uint32Array(65537);for(i=0;i<n;i++){var k=((zs[i]-mn)*sc)|0;keys[i]=k;cnt[k+1]++;}" +
-      "for(i=1;i<65537;i++)cnt[i]+=cnt[i-1];var res=new Float32Array(n);for(i=0;i<n;i++){res[cnt[keys[i]]++]=i;}" +
-      "postMessage({order:res},[res.buffer]);};";
-    worker = new Worker(URL.createObjectURL(new Blob([src], { type: "application/javascript" })));
-    worker.onmessage = function (e) {
-      sortPending = false;
-      if (e.data.order.length !== Math.min(limit, total)) { lastSortKey = ""; return; }
-      idx.array.set(e.data.order); idx.needsUpdate = true;
-      perf.sorts++; perf.sortMs += performance.now() - perf.sortSent;
-    };
-    worker.postMessage({ pos: pos.buffer }, [pos.buffer]);
-    limit = n; document.getElementById("count").textContent = n.toLocaleString();
+    document.getElementById("count").textContent = n.toLocaleString();
+  }
+
+  function buildSparkFiles(spec) {
+    var group = new THREE.Group(), m = new THREE.Matrix4().fromArray(spec.matrix);
+    m.decompose(group.position, group.quaternion, group.scale);
+    var loaded = spec.files.map(function () { return 0; });
+    splatMeshes = spec.files.map(function (file, i) {
+      var mesh = new Spark.SplatMesh({ url: ASSETS + file, onProgress: function (e) {
+        if (!e.lengthComputable) return;
+        loaded[i] = e.loaded / e.total;
+        progress(0.85 * loaded.reduce(function (a, b) { return a + b; }, 0) / loaded.length, "Loading full-colour splats " + Math.round(100 * loaded.reduce(function (a, b) { return a + b; }, 0) / loaded.length) + "%");
+      } });
+      group.add(mesh);
+      return mesh;
+    });
+    splatMesh = group;
+    scene.add(group);
+    colourMode = "full";
+    return Promise.all(splatMeshes.map(function (mesh) { return mesh.initialized; })).then(function () {
+      var n = 0;
+      splatMeshes.forEach(function (mesh) { mesh.forEachSplat(function () { n++; }); });
+      total = n; poiArrays(n);
+      var k = 0, v = new THREE.Vector3();
+      splatMeshes.forEach(function (mesh) {
+        mesh.forEachSplat(function (i, center, scales, quaternion, opacity, color) {
+          v.copy(center).applyMatrix4(m);
+          var t = k * 4;
+          splatXYZ[t] = v.x; splatXYZ[t + 1] = v.y; splatXYZ[t + 2] = v.z;
+          splatRGBA[t] = Math.round(Math.min(1, Math.max(0, color.r)) * 255); splatRGBA[t + 1] = Math.round(Math.min(1, Math.max(0, color.g)) * 255);
+          splatRGBA[t + 2] = Math.round(Math.min(1, Math.max(0, color.b)) * 255); splatRGBA[t + 3] = Math.round(Math.min(1, Math.max(0, opacity)) * 255);
+          k++;
+        });
+      });
+      document.getElementById("count").textContent = n.toLocaleString();
+    });
   }
 
   function buildMesh(buf) {
@@ -272,6 +224,7 @@
         "  if (kind > 2.5) { color = uObstacle; fill = 0.24; rule = 0.24; }",
         "  else if (kind > 1.5) { color = uMargin; fill = 0.06 + 0.26 * step(0.5, fract((vCell.x + vCell.y) * 1.5)); rule = 0.0; }",
         "  gl_FragColor = vec4(color, fill + rule * line * fade);",
+        "  #include <colorspace_fragment>",
         "}"
       ].join("\n")
     }));
@@ -320,7 +273,7 @@
       transparent: true, depthTest: false, depthWrite: false, side: THREE.DoubleSide,
       uniforms: { uColor: { value: new THREE.Color(color) } },
       vertexShader: "attribute float rise; varying float vRise; void main() { vRise = rise; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }",
-      fragmentShader: "uniform vec3 uColor; varying float vRise; void main() { float fade = 1.0 - vRise; gl_FragColor = vec4(uColor, 0.22 * fade * fade); }"
+      fragmentShader: "uniform vec3 uColor; varying float vRise; void main() { float fade = 1.0 - vRise; gl_FragColor = vec4(uColor, 0.22 * fade * fade);\n#include <colorspace_fragment>\n}"
     }));
     m.frustumCulled = false; m.renderOrder = 4;
     return m;
@@ -437,13 +390,11 @@
   Array.prototype.forEach.call(document.querySelectorAll("[data-mode]"), function (b) { b.addEventListener("click", function () { setMode(b.dataset.mode); canvas.focus(); }); });
   document.getElementById("debugBtn").addEventListener("click", function () { toggleDebug(); canvas.focus(); });
 
-  function setDetail(k) {
-    if (!splatMesh) return;
-    limit = Math.min(k, total); var ia = splatMesh.geometry.getAttribute("idx"); for (var i = 0; i < limit; i++) ia.array[i] = i; ia.needsUpdate = true; splatMesh.geometry.instanceCount = limit; lastSortKey = "";
-    document.getElementById("count").textContent = limit.toLocaleString();
-    Array.prototype.forEach.call(document.querySelectorAll("#detail button"), function (b) { b.setAttribute("aria-pressed", parseInt(b.dataset.detail, 10) === k ? "true" : "false"); });
+  function setScale(k) {
+    renderScale = k; resize();
+    Array.prototype.forEach.call(document.querySelectorAll("#detail button"), function (b) { b.setAttribute("aria-pressed", parseFloat(b.dataset.scale) === k ? "true" : "false"); });
   }
-  Array.prototype.forEach.call(document.querySelectorAll("#detail button"), function (b) { b.addEventListener("click", function () { setDetail(parseInt(b.dataset.detail, 10)); canvas.focus(); }); });
+  Array.prototype.forEach.call(document.querySelectorAll("#detail button"), function (b) { b.addEventListener("click", function () { setScale(parseFloat(b.dataset.scale)); canvas.focus(); }); });
 
   function resetToDoor() {
     camera.position.set(startState.x, grid.floorY + grid.eye, startState.z); jumpHeight = 0; jumpSpeed = 0;
@@ -485,7 +436,7 @@
 
   var renderScale = embedMode ? 0.85 : 1;
   function resize() {
-    var dpr = Math.min(window.devicePixelRatio || 1, embedMode ? 1 : 1.25) * renderScale;
+    var dpr = Math.min(window.devicePixelRatio || 1, embedMode ? 1 : 2) * renderScale;
     renderer.setPixelRatio(dpr); renderer.setSize(window.innerWidth, window.innerHeight, false);
     camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
   }
@@ -548,14 +499,6 @@
     stepWalk(dt, input);
     camera.rotation.set(pitch, yaw, 0);
     camera.updateMatrixWorld(); camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
-    if (splatMesh && splatMesh.visible) {
-      var u = splatMesh.material.uniforms;
-      u.uView.value.copy(camera.matrixWorldInverse); u.uProj.value.copy(camera.projectionMatrix);
-      u.uViewport.value.set(renderer.domElement.width, renderer.domElement.height);
-      var e = camera.matrixWorldInverse.elements;
-      var key = [e[2], e[6], e[10], e[14]].map(function (v) { return v.toFixed(3); }).join();
-      if (!sortPending && key !== lastSortKey) { sortPending = true; lastSortKey = key; perf.sortSent = performance.now(); worker.postMessage({ row: [e[2], e[6], e[10], e[14]], lim: limit }); }
-    }
     if (addon.frame) addon.frame(dt, now);
     renderer.render(scene, camera);
     drawMinimap();
@@ -565,7 +508,7 @@
       document.getElementById("pos").textContent = "x " + camera.position.x.toFixed(2) + "  y " + camera.position.y.toFixed(2) + "  z " + camera.position.z.toFixed(2) + " m";
       if (perfOn) {
         var span = now - fpsT;
-        perfEl.textContent = "GPU: " + perfGpu + "\n" + "canvas " + renderer.domElement.width + "x" + renderer.domElement.height + " px, devicePixelRatio " + window.devicePixelRatio + "\n" + "frame interval avg " + (span / Math.max(frames, 1)).toFixed(1) + " ms, worst " + perf.worstGap.toFixed(0) + " ms" + "\n" + "JS per frame " + (perf.jsMs / Math.max(frames, 1)).toFixed(1) + " ms" + "\n" + "sorts/s " + (perf.sorts * 1000 / span).toFixed(0) + ", sort delay avg " + (perf.sorts ? perf.sortMs / perf.sorts : 0).toFixed(0) + " ms" + "\n" + "splats drawn " + limit.toLocaleString();
+        perfEl.textContent = "GPU: " + perfGpu + "\n" + "canvas " + renderer.domElement.width + "x" + renderer.domElement.height + " px, devicePixelRatio " + window.devicePixelRatio + "\n" + "frame interval avg " + (span / Math.max(frames, 1)).toFixed(1) + " ms, worst " + perf.worstGap.toFixed(0) + " ms" + "\n" + "JS per frame " + (perf.jsMs / Math.max(frames, 1)).toFixed(1) + " ms" + "\n" + "sorts/s " + (perf.sorts * 1000 / span).toFixed(0) + ", sort delay avg " + (perf.sorts ? perf.sortMs / perf.sorts : 0).toFixed(0) + " ms" + "\n" + "splats " + total.toLocaleString() + " (" + colourMode + " colour), render scale " + renderScale;
         perf.sorts = 0; perf.sortMs = 0; perf.jsMs = 0; perf.worstGap = 0;
       }
       frames = 0; fpsT = now;
@@ -579,8 +522,8 @@
     camera: camera,
     stepWalk: stepWalk,
     isBlocked: isBlocked,
-    setDetail: setDetail,
-    setScale: function (k) { renderScale = k; resize(); },
+    setScale: setScale,
+    colour: function () { return colourMode; },
     grid: function () { return grid; },
     pose: function () { return { x: camera.position.x, y: camera.position.y, z: camera.position.z, yaw: yaw, pitch: pitch }; },
     setPose: function (x, z, newYaw) { camera.position.x = x; camera.position.z = z; yaw = newYaw; },
@@ -598,7 +541,7 @@
       scene: scene, camera: camera, canvas: canvas, grid: grid, addon: addon, data: poiData, editing: editing,
       poiFile: manifest.pois || "pois.json", walkSpeed: WALK_SPEED, miniCanvas: miniCanvas,
       pose: window.__v.pose,
-      splats: function () { var u = splatMesh.material.uniforms; return { xyz: u.tA.value.image.data, color: u.tD.value.image.data, count: total }; },
+      splats: function () { return { xyz: splatXYZ, color: splatRGBA, count: total }; },
       isLocked: function () { return locked; },
       setView: function (x, z, newYaw, newPitch) {
         camera.position.x = x; camera.position.z = z; yaw = newYaw;
@@ -625,7 +568,7 @@
   }
   function scheduleAutoTune() {
     if (q.get("detail") || q.get("auto") === "0") return;
-    var ladder = [[500000, 0.75], [250000, 0.75], [250000, 0.6]], rung = 0;
+    var ladder = [0.85, 0.7, 0.55, 0.45, 0.375], rung = 0;
     Array.prototype.forEach.call(document.querySelectorAll("#detail button"), function (b) { b.addEventListener("click", function () { tuneCancelled = true; }); });
     function round() {
       if (tuneCancelled) return;
@@ -633,9 +576,9 @@
       measureFps(1500, function (fps) {
         if (tuneCancelled || document.hidden || fps >= 35 || rung >= ladder.length) return;
         var step = ladder[rung++];
-        if (step[0] < limit) setDetail(step[0]);
-        renderScale = step[1]; resize();
-        showTune("Slow graphics detected. Quality was lowered to " + Math.round(limit / 1000) + "k splats at " + Math.round(step[1] * 100) + "% resolution. Change it in Settings under Detail.");
+        if (step >= renderScale) { tuneTimer = setTimeout(round, 1500); return; }
+        setScale(step);
+        showTune("Slow graphics detected. Resolution was lowered to " + Math.round(step * 100) + "%. Change it in Settings under Detail.");
         tuneTimer = setTimeout(round, 1500);
       });
     }
@@ -645,12 +588,14 @@
   var manifest = null;
   fetchBuf(ASSETS + "manifest.json").then(function (mb) {
     manifest = JSON.parse(new TextDecoder().decode(mb));
-    return Promise.all([fetchBuf(ASSETS + manifest.grid), fetchBuf(ASSETS + manifest.splat, function (p) { progress(0.85 * p, "Loading splat " + Math.round(100 * p) + "%"); }), manifest.pois ? fetchBuf(ASSETS + manifest.pois) : null]);
+    var full = manifest.spark && q.get("colour") !== "base";
+    return Promise.all([fetchBuf(ASSETS + manifest.grid), full ? null : fetchBuf(ASSETS + manifest.splat, function (p) { progress(0.85 * p, "Loading splat " + Math.round(100 * p) + "%"); }), manifest.pois ? fetchBuf(ASSETS + manifest.pois) : null]);
   }).then(function (res) {
     parseGrid(JSON.parse(new TextDecoder().decode(res[0])));
     if (res[2]) poiData = JSON.parse(new TextDecoder().decode(res[2]));
     startState = { x: grid.start.x, z: grid.start.z, yaw: Math.atan2(-grid.start.forwardX, -grid.start.forwardZ), pitch: -0.08 };
     resetToDoor();
+    if (!res[1]) return buildSparkFiles(manifest.spark);
     progress(0.9, "Preparing splats");
     return unpackSplat(res[1], manifest.splat).then(function (raw) {
       return new Promise(function (r) { setTimeout(function () { buildSplats(raw); r(); }, 30); });
@@ -661,8 +606,8 @@
     if (mb) buildMesh(mb); else { document.querySelector('[data-mode="mesh"]').hidden = true; document.getElementById("viewField").hidden = true; }
     buildGridOverlay();
     buildMinimap();
-    var detail = parseInt(q.get("detail") || "0", 10);
-    if (detail) setDetail(detail); else if (embedMode) setDetail(500000);
+    var detail = parseFloat(q.get("detail") || "0");
+    if (detail > 0 && detail <= 1) setScale(detail);
     startPois();
     applyMode(); progress(1, "Ready");
     document.getElementById("loading").hidden = true; window.__ready = true;

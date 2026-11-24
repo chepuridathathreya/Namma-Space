@@ -96,6 +96,16 @@ def stage_finish(context):
         "--out-grid", os.path.join(build_dir, grid_name), os.path.join(site, "assets", grid_name),
         "--preview", os.path.join(build_dir, f"{scene}_walkable_map.png"),
     ], "walkable map from the splat")
+    trained_ply = os.path.join(build_dir, "splat_trained.ply")
+    with zipfile.ZipFile(context["result"]) as archive:
+        member = next(n for n in archive.namelist() if n.endswith("splat.ply"))
+        with archive.open(member) as source, open(trained_ply, "wb") as target:
+            shutil.copyfileobj(source, target)
+    run_live([
+        sys.executable, os.path.join(SCRIPTS_DIR, "export_spark.py"),
+        "--ply", trained_ply,
+        "--assets", os.path.join(site, "assets"),
+    ], "full-colour splat for the viewer")
 
 
 def find_free_port(start):

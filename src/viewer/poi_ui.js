@@ -151,6 +151,7 @@
         "  vec3 color = mix(uColor, vec3(1.0), chevron * 0.85);",
         "  float alpha = (0.62 + 0.33 * chevron) * body * smoothstep(0.0, 0.35, vAlong) * vSeen;",
         "  gl_FragColor = vec4(color, alpha);",
+        "  #include <colorspace_fragment>",
         "}"
       ].join("\n")
     });
