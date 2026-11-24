@@ -194,7 +194,7 @@ Do steps 0 and 1 only. Success criteria: `STEP 1 FINISHED`, frames placed 80% or
 | remote: `STOPPED: this zip is not a NammaSpace bundle` | wrong zip | use the zip from `workspace/to_gpu` |
 | remote: `NO RESULT ZIP WAS PRODUCED` | training stopped | read the last lines above it and the log in `bundles/<scene>_<date>/logs/` |
 | STEP 3: `does not line up` | the result is from a different bundle | use the result for the same scene |
-| STEP 3: `missing ... runs\<scene>` | STEP 1 data for that scene is not on this laptop | run STEP 1 again for that video |
+| STEP 3: `missing ... workspace\runs\<scene>` | STEP 1 data for that scene is not on this laptop | run STEP 1 again for that video |
 
 ## Using options
 

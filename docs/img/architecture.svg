@@ -78,7 +78,7 @@ text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 <text class="body" x="16" y="146">Compress best-first</text>
 <text class="body" x="16" y="165">Grid from splat + path</text>
 <line class="rule" x1="16" y1="190" x2="204" y2="190"/>
-<text class="out k3" x="16" y="214">.qsplat + grid.json</text>
+<text class="out k3" x="16" y="214">.qsplat + collision.json</text>
 </g>
 
 <g transform="translate(1034,30)">

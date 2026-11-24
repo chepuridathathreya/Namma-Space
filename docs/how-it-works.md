@@ -86,7 +86,7 @@ You put a video in `workspace\video\` and double-click `scripts/windows/step1_pr
 | 5 | floor, scale, collision map | `build_collision_from_colmap.py`: finds the **up direction from the floor** (a plane fitted to the lowest points under your walking path), sets floor = height 0, scales to metres assuming the phone was about 1.4 m high, then builds the floor plan | camera "up" directions disagree (phone was not held upright) |
 | 6 | pack zip for the remote PC | copies the placed frames (full size + half size), the three `.bin` files, `scene.json`, the remote scripts and `REMOTE_NOTES.md`, then zips and tests the zip | the zip fails its integrity check |
 
-At the end it prints a **TIME TAKEN** table and the full path of the zip, which is also copied to `workspace\to_gpu\`. Everything printed is also saved to `runs\<scene>\logs\step1.log`.
+At the end it prints a **TIME TAKEN** table and the full path of the zip, which is also copied to `workspace\to_gpu\`. Everything printed is also saved to `workspace\runs\<scene>\logs\step1.log`.
 
 **How the collision map is built (stage 6), step by step:**
 1. Up direction and floor: gravity cannot be measured from a video, so we find the floor itself.
@@ -111,7 +111,7 @@ It prints a **TIME TAKEN** table and the path of the result zip. If another user
 
 You put the result zip in `workspace\from_gpu\` and double-click `scripts/windows/step3_finish.bat` (code: `src/pipeline/step3_finish.py`, which calls `src/pipeline/finish_scene.py`).
 
-1. **Find the zip and the matching STEP 1 data.** `scene.json` inside the zip tells it which scene; it then looks for `runs\<scene>\` on the laptop.
+1. **Find the zip and the matching STEP 1 data.** `scene.json` inside the zip tells it which scene; it then looks for `workspace\runs\<scene>\` on the laptop.
 2. **finish_scene.py** does the careful part:
    - *Undo nerfstudio's coordinate change.* nerfstudio re-centres, rotates and rescales the scene to make training easier. `dataparser_transforms.json` records this. We reverse it, then apply `world.json`, so the splat lands in the same world frame as the collision grid. Positions, rotations and sizes are all transformed.
    - *Check the result.* It measures how far the splat's Gaussians are from the real COLMAP points. If they do not line up (more than 0.4 m median), it **stops** instead of producing a website where walls are in the wrong place.
@@ -172,7 +172,7 @@ logs\              step1.log, step1_summary.json, later step3.log
 site_build\        (after STEP 3) the .qsplat, a cleaned .ply and the finished site\
 ```
 
-`runs\` is generated and not pushed to GitHub. When a scene is finished you move what you want to keep into its numbered project folder.
+`workspace\runs\` is generated and not pushed to GitHub. When a scene is finished you move what you want to keep into its folder under `scenes\`.
 
 ## 11. When something goes wrong
 

@@ -7,6 +7,6 @@
   - Colab: 1,534 s, 394,846 gaussians, PSNR 29.1156, SSIM 0.9116, LPIPS 0.1438. The Colab result is the one used for the site (it looked sharper in the viewer).
 - STEP 3 (laptop, 15 s): 344,087 gaussians in the site after cleaning (3,640 ghosts below the floor removed), 5.4 MB qsplat. Walkable cells: camera-path map 1,065, splat map 983, combined 1,131.
 - 16 Nov: the grid was rebuilt with obstacle heights (1,708 of 1,751 obstacle cells, tallest 2.31 m). The walkable cells did not change.
-- Places: 14 in `site/assets/pois.json`; 13 placed from headless aim shots, 1 (sink) added by hand in the editor.
+- Places: 15 in `site/assets/pois.json`. The first 14: 13 placed from headless aim shots, 1 (sink) added by hand in the editor.
 - Known gaps: parts of the rooms were never filmed, and the ceiling is rough. These are capture gaps, not training faults.
-- Not deployed.
+- Deployed at https://namma-space.pages.dev/hallway-4k/.
