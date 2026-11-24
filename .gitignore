@@ -12,3 +12,4 @@ _quarantine/
 !tests/data/sample_scene.zip
 workspace/*/*
 !workspace/*/.gitkeep
+.claude/
