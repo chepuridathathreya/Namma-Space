@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" width="1280" height="520" role="img" aria-labelledby="t d">
+<title id="t">NammaSpace architecture</title>
+<desc id="d">One phone video goes through prepare, train, finish and place tagging, and becomes a static web viewer with walking, collision, place search and routes.</desc>
+<style>
+svg { --bg:#ffffff; --card:#f6f8fa; --line:#d0d7de; --ink:#1f2328; --muted:#59636e; --arrow:#8c959f;
+      --c0:#9a6700; --c1:#0969da; --c2:#8250df; --c3:#1a7f37; --c4:#bc4c00; --c5:#cf222e; }
+@media (prefers-color-scheme: dark) {
+  svg { --bg:#0d1117; --card:#161b22; --line:#30363d; --ink:#e6edf3; --muted:#9198a1; --arrow:#6e7681;
+        --c0:#d29922; --c1:#4493f8; --c2:#a371f7; --c3:#3fb950; --c4:#f0883e; --c5:#f85149; }
+}
+text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; fill: var(--ink); }
+.bg { fill: var(--bg); }
+.card { fill: var(--card); stroke: var(--line); stroke-width: 1; }
+.chip { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; }
+.title { font-size: 18px; font-weight: 700; }
+.meta { font-size: 12.5px; fill: var(--muted); }
+.body { font-size: 13.5px; }
+.out { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; font-weight: 600; }
+.rule { stroke: var(--line); stroke-width: 1; }
+.flow { stroke: var(--arrow); stroke-width: 2; fill: none; }
+.head { fill: var(--arrow); }
+.cell { fill: var(--bg); stroke: var(--line); stroke-width: 1; }
+.ctitle { font-size: 15px; font-weight: 700; }
+.cbody { font-size: 13px; fill: var(--muted); }
+.k0 { fill: var(--c0); } .k1 { fill: var(--c1); } .k2 { fill: var(--c2); } .k3 { fill: var(--c3); } .k4 { fill: var(--c4); } .k5 { fill: var(--c5); }
+</style>
+<defs>
+<marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker>
+</defs>
+<rect class="bg" x="0" y="0" width="1280" height="520" rx="12"/>
+
+<g transform="translate(26,30)">
+<rect class="card" width="220" height="230" rx="10"/><rect class="k0" width="220" height="4" rx="2"/>
+<text class="chip k0" x="16" y="30">CAPTURE</text>
+<text class="title" x="16" y="56">Phone video</text>
+<text class="meta" x="16" y="78">Phone · 7 to 8 min walk</text>
+<text class="body" x="16" y="108">4K, landscape, one slow</text>
+<text class="body" x="16" y="127">loop at one height</text>
+<text class="body" x="16" y="146">Exposure locked</text>
+<text class="body" x="16" y="165">Plus about 80 photos</text>
+<line class="rule" x1="16" y1="190" x2="204" y2="190"/>
+<text class="out k0" x="16" y="214">video.mp4</text>
+</g>
+
+<g transform="translate(278,30)">
+<rect class="card" width="220" height="230" rx="10"/><rect class="k1" width="220" height="4" rx="2"/>
+<text class="chip k1" x="16" y="30">STEP 1</text>
+<text class="title" x="16" y="56">Prepare</text>
+<text class="meta" x="16" y="78">CPU · about 50 min</text>
+<text class="body" x="16" y="108">Sharpest frame per 0.5 s</text>
+<text class="body" x="16" y="127">COLMAP camera poses</text>
+<text class="body" x="16" y="146">and sparse points</text>
+<text class="body" x="16" y="165">Floor, scale, path grid</text>
+<line class="rule" x1="16" y1="190" x2="204" y2="190"/>
+<text class="out k1" x="16" y="214">bundle.zip</text>
+</g>
+
+<g transform="translate(530,30)">
+<rect class="card" width="220" height="230" rx="10"/><rect class="k2" width="220" height="4" rx="2"/>
+<text class="chip k2" x="16" y="30">STEP 2</text>
+<text class="title" x="16" y="56">Train</text>
+<text class="meta" x="16" y="78">GPU · free Colab or Kaggle T4</text>
+<text class="body" x="16" y="108">3D Gaussian Splatting</text>
+<text class="body" x="16" y="127">nerfstudio splatfacto</text>
+<text class="body" x="16" y="146">(gsplat), 30,000 steps</text>
+<text class="body" x="16" y="165">Scored on held-out frames</text>
+<line class="rule" x1="16" y1="190" x2="204" y2="190"/>
+<text class="out k2" x="16" y="214">splat.ply</text>
+</g>
+
+<g transform="translate(782,30)">
+<rect class="card" width="220" height="230" rx="10"/><rect class="k3" width="220" height="4" rx="2"/>
+<text class="chip k3" x="16" y="30">STEP 3</text>
+<text class="title" x="16" y="56">Finish</text>
+<text class="meta" x="16" y="78">CPU · about 15 s</text>
+<text class="body" x="16" y="108">Align to the floor frame</text>
+<text class="body" x="16" y="127">Drop floaters and ghosts</text>
+<text class="body" x="16" y="146">Compress best-first</text>
+<text class="body" x="16" y="165">Grid from splat + path</text>
+<line class="rule" x1="16" y1="190" x2="204" y2="190"/>
+<text class="out k3" x="16" y="214">.qsplat + grid.json</text>
+</g>
+
+<g transform="translate(1034,30)">
+<rect class="card" width="220" height="230" rx="10"/><rect class="k4" width="220" height="4" rx="2"/>
+<text class="chip k4" x="16" y="30">STEP 4</text>
+<text class="title" x="16" y="56">Tag places</text>
+<text class="meta" x="16" y="78">Browser editor · by hand</text>
+<text class="body" x="16" y="108">Aim at an object</text>
+<text class="body" x="16" y="127">Press T, type a name</text>
+<text class="body" x="16" y="146">Checked against the</text>
+<text class="body" x="16" y="165">walkable grid</text>
+<line class="rule" x1="16" y1="190" x2="204" y2="190"/>
+<text class="out k4" x="16" y="214">pois.json</text>
+</g>
+
+<path class="flow" marker-end="url(#ah)" d="M248,145 L276,145"/>
+<path class="flow" marker-end="url(#ah)" d="M500,145 L528,145"/>
+<path class="flow" marker-end="url(#ah)" d="M752,145 L780,145"/>
+<path class="flow" marker-end="url(#ah)" d="M1004,145 L1032,145"/>
+<path class="flow" marker-end="url(#ah)" d="M892,262 L892,316"/>
+<path class="flow" marker-end="url(#ah)" d="M1144,262 L1144,316"/>
+
+<g transform="translate(26,320)">
+<rect class="card" width="1228" height="176" rx="10"/><rect class="k5" width="1228" height="4" rx="2"/>
+<text class="chip k5" x="16" y="30">OUTPUT</text>
+<text class="title" x="16" y="56">Web viewer</text>
+<text class="meta" x="150" y="56">Static site on Cloudflare Pages · own WebGL2 renderer · nothing to install</text>
+<g transform="translate(16,76)">
+<rect class="cell" width="287" height="84" rx="8"/>
+<text class="ctitle" x="14" y="28">Render</text>
+<text class="cbody" x="14" y="50">Gaussians sorted back to front</text>
+<text class="cbody" x="14" y="68">Detail drops if fps is low</text>
+</g>
+<g transform="translate(319,76)">
+<rect class="cell" width="287" height="84" rx="8"/>
+<text class="ctitle" x="14" y="28">Walk</text>
+<text class="cbody" x="14" y="50">W A S D, mouse or touch</text>
+<text class="cbody" x="14" y="68">10 cm grid stops you at walls</text>
+</g>
+<g transform="translate(622,76)">
+<rect class="cell" width="287" height="84" rx="8"/>
+<text class="ctitle" x="14" y="28">Find</text>
+<text class="cbody" x="14" y="50">Search places by name</text>
+<text class="cbody" x="14" y="68">Aliases and typos work</text>
+</g>
+<g transform="translate(925,76)">
+<rect class="cell" width="287" height="84" rx="8"/>
+<text class="ctitle" x="14" y="28">Route</text>
+<text class="cbody" x="14" y="50">A* on the same walkable grid</text>
+<text class="cbody" x="14" y="68">Walk or fly to the place</text>
+</g>
+</g>
+</svg>
