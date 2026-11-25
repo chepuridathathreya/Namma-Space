@@ -85,7 +85,7 @@ ns-train "$METHOD" ${MODEL_ARGS[@]+"${MODEL_ARGS[@]}"} \
   colmap --colmap-path colmap/sparse/0 --images-path images --downscale-factor "$FACTOR"
 RC=$?
 T_TRAIN=$(date +%s)
-[ "$RC" -eq 0 ] || fail "training failed (exit $RC). Log: $LOG. After fixing, you can continue with: RESUME=1 is not automatic here, ask Claude to resume from outputs/"
+[ "$RC" -eq 0 ] || fail "training failed (exit $RC). Log: $LOG. Fix the cause, then resume from the last checkpoint in outputs/"
 echo " finished at $(stamp)"
 
 banner "3/5 exporting the splat file"

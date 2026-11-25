@@ -28,7 +28,7 @@ Constraints set by the organizers: open-source tools only, no commercial reconst
 | 2. Train | Trains a 3D Gaussian splat for 30,000 steps and scores it on held-out frames. Runs on a free Colab or Kaggle T4 ([cloud training](docs/cloud-training.md)) or on a local NVIDIA GPU of 16 GB or more. | nerfstudio 1.1.5 (splatfacto), gsplat 1.4, PyTorch | `splat.ply` |
 | 3. Finish | Moves the splat into the floor-aligned metric frame, removes floaters and mirror ghosts below the floor, compresses it best-first, and merges a splat-based collision grid with the camera-path grid. | NumPy, SciPy | `.qsplat`, `collision.json` |
 | 4. Tag places | A browser editor: aim at an object, press `T`, name it. Each place is checked against the walkable grid before it is saved. See [places and routes](docs/places-and-routes.md). | the viewer, Python | `pois.json` |
-| Viewer | Static website. Draws the splat with our own WebGL2 renderer, stops the visitor at walls, searches places and draws an A* route on the same grid. Details: [places and routes](docs/places-and-routes.md). | WebGL2, Three.js, plain JavaScript, Cloudflare Pages | website |
+| Viewer | Static website. Draws the splat in full colour with Spark, stops the visitor at walls, searches places and draws an A* route on the same grid. Details: [places and routes](docs/places-and-routes.md). | Spark 2.4, Three.js 0.180, WebGL2, plain JavaScript, Cloudflare Pages | website |
 
 ## Status
 
