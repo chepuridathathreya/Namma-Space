@@ -1,10 +1,10 @@
 # How to Run the Pipeline
 
-Last updated: 2026-10-28. How each script works is in [how-it-works.md](how-it-works.md). This page is only the commands.
+Last updated: 2026-11-25. How each script works is in [how-it-works.md](how-it-works.md). This page is only the commands.
 
-For a picture of the whole flow and the two setups, see the diagrams in the [README](../README.md#how-it-works).
+For a picture of the whole flow, see the diagram in the [README](../README.md#approach).
 
-There are two ways to run it. **Option A, one computer, is the recommended way and needs a single command.** Option B is the two-machine setup we used ourselves.
+There are two ways to run it. **Option A, one computer with a large NVIDIA GPU, needs a single command.** Option B splits the work: STEPS 1 and 3 on a laptop, training on a free Colab or Kaggle GPU or on a separate GPU PC. Option B with a free cloud GPU is how the current scenes were built.
 
 ---
 
@@ -72,25 +72,27 @@ The capture rules are in Step 0 and Step 0b of Option B below. They apply to bot
 
 ---
 
-## Option B: two machines (laptop plus a GPU PC)
+## Option B: laptop plus a GPU (free cloud notebook or GPU PC)
 
-Use this if your laptop cannot train but you have access to a GPU PC. Parts 1 and 3 run on the laptop, part 2 on the GPU PC.
+Use this if your laptop cannot train. Parts 1 and 3 run on the laptop, part 2 on a free Colab or Kaggle GPU, or on a GPU PC.
 
 ```
- LAPTOP  STEP 1  ->  zip  ->  GPU PC  STEP 2  ->  zip  ->  LAPTOP  STEP 3  ->  website
+ LAPTOP  STEP 1  ->  zip  ->  COLAB / KAGGLE / GPU PC  STEP 2  ->  zip  ->  LAPTOP  STEP 3  ->  website
 ```
 
 ### Before you start (one time)
 
 **Laptop** needs: Python 3 with `numpy scipy opencv-python Pillow`, `ffmpeg`, and COLMAP (on PATH, or at `D:\Tools\COLMAP`).
 
-**Remote PC** needs: a conda environment named `namma3dgs` with the packages from `requirements-train.txt` (see [hardware.md](hardware.md)) and the file `RUN_NEW_BUNDLE.sh` saved in its workspace folder. That file is in this repo at `src/training/RUN_NEW_BUNDLE.sh`. Put it on the remote PC once; it takes any bundle zip and does everything.
+**Free cloud GPU** needs: a Google account for Colab, or a phone-verified Kaggle account with Internet switched on in the notebook. The notebooks install everything themselves. Details: [cloud-training.md](cloud-training.md).
+
+**Remote PC** (only if you use your own GPU PC instead) needs: a conda environment named `namma3dgs` with the packages from `requirements-train.txt` (see [hardware.md](hardware.md)) and the file `RUN_NEW_BUNDLE.sh` saved in its workspace folder. That file is in this repo at `src/training/RUN_NEW_BUNDLE.sh`. Put it on the remote PC once; it takes any bundle zip and does everything.
 
 ---
 
 ## Step 0 - Film the video
 
-- Follow the tested settings in `docs/capture-sop.md` (Room scene: landscape, 1080p at 30 fps, Pro mode, manual focus, 1/100 s, ISO 800, 5000 K, EV 0). Phone at chest or eye height, tilted slightly down. 4K at 30 fps is an untested recommendation for sharper frames after downscaling; the hallway v3 capture used it, but no held-out score exists yet. Keep disk free: a 7-minute 4K video is 3-4 GB.
+- Follow the tested settings in `docs/capture-sop.md` (Room scene: landscape, 1080p at 30 fps, Pro mode, manual focus, 1/100 s, ISO 800, 5000 K, EV 0). Phone at chest or eye height, tilted slightly down. 4K at 30 fps (3840x2160) gives sharper frames: the 4K hallway and bedroom scene scored PSNR 29.12 dB on held-out frames, the best of our scenes (the 1080p Room scored 27.14 dB). Keep disk free: a 7-minute 4K video is 3-4 GB.
 - Switch off bright ceiling lamps and close curtains where you can: glossy floors and wardrobes reflect them, and a splat can only fake a reflection with ghost copies.
 - **One continuous walk at the same height and angle.** Never raise the phone toward the ceiling for a second lap; that bent v1.
 - Walk slowly (about half a metre a second), turn slowly. Keep about 1 m from walls. Do not fill the frame with a plain wall or curtain.
@@ -104,7 +106,7 @@ Corners and places the walk shows only briefly can be helped with 20-40 photos. 
 - 2-3 photos per corner, each a step apart, at eye height and tilted up.
 - Empty the folder after the run, or the next scene will pick up the old photos.
 
-## Step 1 - Laptop: prepare (measured: 87 minutes for a 7-minute video at 883 frames; use `--window 1` for about half the frames and a much faster COLMAP)
+## Step 1 - Laptop: prepare (measured: 87 minutes for a 7-minute 1080p video at 883 frames, 53 minutes for the 7 m 43 s 4K video at 937 frames; use `--window 1` for about half the frames and a much faster COLMAP)
 
 1. Copy **one** video file into `workspace\video\`.
    The scene is named after the file, so use a clean name with letters, numbers and underscores, for example `hallway_bedroom_v2.mp4`.
@@ -127,11 +129,19 @@ Corners and places the walk shows only briefly can be helped with 20-40 photos. 
 
 **You can stop here to test only the laptop side.** No remote PC is needed to check that STEP 1 works.
 
-## Step 2 - Carry the zip to the remote PC
+## Step 2 - Carry the zip to the GPU
 
-Copy the zip from `workspace/to_gpu` to the remote PC any way that works: Google Drive, a GitHub release, a USB drive. Note the path where it lands, for example `~/Downloads/hallway_bedroom_v2_to_remote.zip`.
+- **Colab:** upload the zip to a Google Drive folder named `namma`.
+- **Kaggle:** upload the zip as a private Kaggle Dataset.
+- **GPU PC:** copy the zip there any way that works: Google Drive, a GitHub release, a USB drive. Note the path where it lands, for example `~/Downloads/hallway_bedroom_v2_to_remote.zip`.
 
-## Step 3 - Remote PC: train (about 12-16 minutes)
+## Step 3 - Train
+
+### On a free cloud GPU (about 25 minutes on a T4)
+
+Open `src/training/NAMMA_STEP2_colab.ipynb` in Colab or `src/training/NAMMA_STEP2_kaggle.ipynb` in Kaggle, pick the T4 GPU and run all cells. The notebooks train at half image size (`DOWNSCALE = 2`) so they fit the T4; set `ITERS = 2000` for a quick test. Colab saves the result zip back to the `namma` Drive folder; on Kaggle download it from the notebook output. The 4K scene took 1,534 s on Colab and 1,448 s on Kaggle, with the same score.
+
+### On a GPU PC (about 12-16 minutes)
 
 Open a terminal on the remote PC, go to the workspace folder that holds `RUN_NEW_BUNDLE.sh`, and run:
 
@@ -151,12 +161,12 @@ Optional settings: `bash RUN_NEW_BUNDLE.sh <zip> [steps] [downscale] [cache] [pr
 
 ## Step 4 - Carry the result zip back
 
-Copy `<scene>_result.zip` from the remote PC to the laptop folder `workspace\from_gpu\`. Keep **only one** zip there (STEP 3 uses the newest).
+Copy the result zip from Drive, Kaggle or the GPU PC to the laptop folder `workspace\from_gpu\`. Keep **only one** zip there (STEP 3 uses the newest).
 
-## Step 5 - Laptop: finish and open the website (about 10 seconds)
+## Step 5 - Laptop: finish and open the website (about 15 seconds, plus the full-colour export)
 
 1. Double-click **`scripts/windows/step3_finish.bat`**.
-2. It finds the matching STEP 1 data, lines the splat up with the collision map and checks it, then cleans it (deletes mirror ghosts under the floor, sorts splats best-first), builds a walkable map from the splat as well as the camera path, builds the website, and prints:
+2. It finds the matching STEP 1 data, lines the splat up with the collision map and checks it, then cleans it (deletes mirror ghosts under the floor, sorts splats best-first), builds a walkable map from the splat as well as the camera path, writes the full-colour Spark file (`.spz`, split into parts under 25 MiB) next to the base-colour `.qsplat`, builds the website, and prints:
    ```
    OPEN THIS LINK:  http://localhost:8765/
    ```
@@ -164,7 +174,7 @@ Copy `<scene>_result.zip` from the remote PC to the laptop folder `workspace\fro
 3. Click the scene, then **W A S D** to walk, mouse to look, **Shift** to run, **M** to show the collision grid, **R** to go back to the start. The top-right number is your FPS.
 4. Press **Ctrl+C** in the black window to stop the website.
 
-**Detail buttons:** 60%, 80% and Full set the render resolution. All splats are always drawn. On a slow GPU the viewer lowers the resolution by itself and says so.
+**Detail buttons:** 60%, 80% and Full set the render resolution. All splats are always drawn. On a slow GPU the viewer lowers the resolution by itself and says so. Add `?colour=base` to the address to compare with the base-colour file.
 
 **Slow in your browser?** Add `?debug` to the end of the address (for example `http://localhost:8765/?debug`). A panel appears showing which GPU the browser really uses, the canvas size, the frame time, the JavaScript time per frame and the sort delay. Send a screenshot of it. On the dev laptop's RTX 3060 the viewer measured about 175 FPS with all splats at 1600x900, so a much lower number points at the browser or Windows, not at the scene.
 
@@ -174,7 +184,19 @@ Copy `<scene>_result.zip` from the remote PC to the laptop folder `workspace\fro
 
 - The finished website files are in `workspace\runs\<scene>\site_build\site\`.
 - When you are happy, move what you want to keep into its scene folder (for example `scenes\hallway-bedroom\`). Move the result zip out of `workspace/from_gpu` so the next run starts clean.
-- Uploading to Cloudflare is a separate step, not part of these three clicks yet.
+- If a scene already has a site and you only need the full-colour file, run `python src/pipeline/export_spark.py --ply <splat.ply from the result zip> --assets scenes/<name>/site/assets`.
+
+## Step 7 - Tag places (STEP 4)
+
+1. Double-click **`scripts/windows/step4_tag_places.bat`**, or run `python src/pipeline/step4_tag_places.py --site scenes/<name>/site`.
+2. The scene opens at `http://localhost:8766/?edit=1`. Aim the centre dot at an object, press `T` and type a name.
+3. Press **Save to project**. Each place is checked against the walkable grid, the old file is backed up and `site/assets/pois.json` is written.
+
+Search, routes and the place file format are in [places-and-routes.md](places-and-routes.md).
+
+## Step 8 - Publish the website
+
+Run `bash scripts/deploy.sh`. It copies the landing page and every scene site into a new folder under `tmp/wrangler_run/` and uploads it to the Cloudflare Pages project `namma-space`. It needs bash (Git Bash or WSL on Windows), Node.js for `npx wrangler`, and a Cloudflare login (`npx wrangler login`). Every file must be under 25 MiB, the Cloudflare Pages limit.
 
 ---
 
