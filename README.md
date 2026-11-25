@@ -35,7 +35,7 @@ Constraints set by the organizers: open-source tools only, no commercial reconst
 | Round | Scope | State |
 |---|---|---|
 | 1 | Reconstruction and free roaming | Submitted, qualified for Round 2 on 10 Nov 2026 |
-| 2 | POI tagging, search and navigation | Built and live in all scenes with places: 15 places in the 4K scene, 6 in the hallway scene |
+| 2 | POI tagging, search and navigation | Built and live in all scenes with places: 14 places in the 4K scene, 6 in the hallway scene |
 | 3 | On-site capture of a multi-floor venue | Not started |
 
 ## Results
@@ -49,7 +49,7 @@ Scores are measured on frames held out from training.
 | Hallway and bedroom | [`scenes/hallway-bedroom`](scenes/hallway-bedroom) | 868 | 650,654 | 26.46 dB | 0.874 | 0.244 | 6 |
 | Early bedroom | [`scenes/bedroom-early`](scenes/bedroom-early) | not recorded | 700,000 shown | not scored | | | |
 
-Gaussians are counts after training, except the early bedroom, which predates scoring. The 4K site shows 344,087 after cleaning. Settings and timings are in `notes/TRAINING_REPORT.md` for the Room, Hallway and 4K scenes.
+Gaussians are counts after training, except the early bedroom, which predates scoring. The 4K site shows 344,087 after cleaning. Settings and timings are in each scene's `notes/TRAINING_REPORT.md`, for example [`scenes/hallway-bedroom-4k/notes/TRAINING_REPORT.md`](scenes/hallway-bedroom-4k/notes/TRAINING_REPORT.md), for the Room, Hallway and 4K scenes.
 
 ## Run it
 

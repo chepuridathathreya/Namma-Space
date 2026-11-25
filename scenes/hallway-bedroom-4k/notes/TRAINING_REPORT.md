@@ -11,3 +11,4 @@
 - Known gaps: parts of the rooms were never filmed, and the ceiling is rough. These are capture gaps, not training faults.
 - Deployed at https://namma-space.pages.dev/hallway-4k/.
 - 25 Nov: full-colour Spark file exported from the Colab splat.ply with `src/pipeline/export_spark.py` (SH degree 3, 13.0 MiB, one file). All 344,087 published splats were found (median offset 0.07 mm), 344,084 kept. The site now loads it; `?colour=base` still shows the old file.
+- 25 Nov: places re-tagged in STEP 4. Now 14 places (Kitchen Cabinet and Ceiling Fan removed, Washroom and a new Switchboard added). 12 have a hand-set stand spot; TV and Fridge use the automatic one. Every arrival was checked on desktop and at phone size.

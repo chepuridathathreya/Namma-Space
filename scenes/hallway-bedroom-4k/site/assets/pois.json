@@ -177,7 +177,7 @@
       "id": "place_14",
       "name": "Sink",
       "aliases": [
-        "washbashin",
+        "washbasin",
         "tap"
       ],
       "category": "furniture",
@@ -218,7 +218,7 @@
       "x": 0.6,
       "y": 1.29,
       "z": -0.47,
-      "description": "a switchborad to tun on the lights or fans",
+      "description": "Switchboard to turn on the lights and fans",
       "stand": {
         "x": -0.39,
         "z": -0.82

@@ -88,10 +88,11 @@
     function updateLabels() {
       const pose = viewer.pose(), width = window.innerWidth, height = window.innerHeight;
       const inRange = new Set(index.within(pose.x, pose.z, LABEL_RANGE));
+      const here = selected && route && route.metres < ARRIVE_DISTANCE;
       let best = null, bestGap = AIM_RADIUS;
       placed.forEach(function (entry) {
         const poi = entry.poi, label = entry.label;
-        let shown = inRange.has(poi) || entry === selected;
+        let shown = entry === selected || (inRange.has(poi) && !here);
         if (shown) {
           projected.set(poi.x, poi.y, poi.z).applyMatrix4(camera.matrixWorldInverse);
           shown = projected.z < -0.1;
@@ -259,7 +260,7 @@
     function walkToSelected() {
       if (!selected || !route) return;
       motion = null; walking = true;
-      say("Walking to " + selected.poi.name + ". Press a move key to stop.");
+      say("Walking to " + selected.poi.name + (window.matchMedia("(pointer: coarse)").matches ? ". Tap Close to stop." : ". Press a move key to stop."));
     }
 
     function arrive(name) {
@@ -374,6 +375,8 @@
     function updateCardDistance() {
       const line = card.querySelector(".poi-distance");
       if (!line || !selected) return;
+      const actions = card.querySelector(".poi-actions");
+      if (actions) actions.hidden = !!route && route.metres < ARRIVE_DISTANCE;
       if (!route) { line.textContent = "No walkable route from here"; return; }
       line.textContent = route.metres < ARRIVE_DISTANCE ? "You are here" : formatMetres(route.metres) + " walk, about " + Math.max(1, Math.round(route.metres / viewer.walkSpeed)) + " s";
     }
