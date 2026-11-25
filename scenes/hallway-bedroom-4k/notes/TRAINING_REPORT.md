@@ -10,3 +10,4 @@
 - Places: 15 in `site/assets/pois.json`. The first 14: 13 placed from headless aim shots, 1 (sink) added by hand in the editor.
 - Known gaps: parts of the rooms were never filmed, and the ceiling is rough. These are capture gaps, not training faults.
 - Deployed at https://namma-space.pages.dev/hallway-4k/.
+- 25 Nov: full-colour Spark file exported from the Colab splat.ply with `src/pipeline/export_spark.py` (SH degree 3, 13.0 MiB, one file). All 344,087 published splats were found (median offset 0.07 mm), 344,084 kept. The site now loads it; `?colour=base` still shows the old file.
