@@ -1,6 +1,6 @@
 # NammaSpace capture SOP
 
-Standard operating procedure for filming an indoor space so that it can be rebuilt as a walkable 3D scene. It is written from what we actually did for the Room scene, which gave our best result, and from what went wrong in earlier captures. It does not describe a method we did not use.
+Standard operating procedure for filming an indoor space so that it can be rebuilt as a walkable 3D scene. It is written from what we actually did for the Room scene, the best capture whose phone settings were recorded, from the 4K hallway and bedroom capture, which gave our best score, and from what went wrong in earlier captures. It does not describe a method we did not use.
 
 ## 1. Scope
 
@@ -10,7 +10,7 @@ Standard operating procedure for filming an indoor space so that it can be rebui
 
 ## 2. Equipment and settings
 
-What was used for the Room scene (best result):
+What was used for the Room scene (settings recorded):
 
 | Item | Setting |
 |---|---|
@@ -59,7 +59,7 @@ A walk shows corners and the top of the walls only briefly. To cover them we too
 - Go to every corner and take **three to four photos** per corner, a small step apart.
 - Each photo should show things the video also shows, so that it can be matched to the video frames.
 
-For the Room we used 26 photos. All 26 were registered by COLMAP.
+For the Room we used 26 photos. All 26 were registered by COLMAP. For the 4K hallway and bedroom we used 79 photos, and all 79 were registered.
 
 The photos go in `workspace/photos/`. The pipeline adds them to the frame set automatically. Empty that folder after each run, or the next scene will pick them up.
 
@@ -91,15 +91,16 @@ Visual checks you can do yourself:
 
 | Scene | Frames | Held-out PSNR | SSIM | LPIPS |
 |---|---:|---:|---:|---:|
+| Hallway and Bedroom, 4K | 937 | 29.12 dB | 0.912 | 0.144 |
 | Room (this SOP) | 613 | 27.14 dB | 0.913 | 0.191 |
 | Hallway and Bedroom v2 | 868 | 26.46 dB | 0.874 | 0.244 |
 
-The Room is a different scene from the hallway, so these scores show progress in the method, not a controlled comparison. We have not run an experiment that isolates the effect of the extra photos.
+The Room is a different scene from the hallway, so these scores show progress in the method, not a controlled comparison. The 4K scene films the same space as v2, but it also changed the resolution, the walk, the photos (79, where v2 used video frames only) and the training setup (half-size images on a free T4, where v2 trained at full size on a GPU PC), so its gain cannot be credited to any one of them. We have not run an experiment that isolates the effect of the extra photos.
 
 ## 9. Not recorded and not yet tested
 
 - **Lighting:** not controlled and not consistent across the Room capture, and not measured.
-- **Frame rate and resolution:** 1080p at 30 fps was used. A 4K re-capture for sharper frames is still open.
+- **Frame rate and resolution:** the Room used 1080p at 30 fps. The 4K hallway and bedroom capture (14 Nov) is 3840 x 2160 at about 14.9 fps, 7 min 43 s, and gave our best score (29.12 dB). Its phone settings were not written down, so the table in section 2 still comes from the Room. STEP 1 picks frames at 1920 x 1080 from either.
 - **Capture time:** roughly 8 to 10 minutes for the video and the photos together, estimated and not timed.
 
 ## 10. Round 1 submission
@@ -108,7 +109,7 @@ What the Techfest portal asks for: a Google Drive folder link, shared as "Anyone
 
 | Required item | What we provide |
 |---|---|
-| Technical abstract PDF, at most 5 pages: system architecture, pipeline design, SOP construction details and technical approach | written from the technical report and this SOP, 4 pages: `submission/abstract/Namma space abstract.pdf` |
+| Technical abstract PDF, at most 5 pages: system architecture, pipeline design, SOP construction details and technical approach | written from the technical report and this SOP, 4 pages: `submission/round1/abstract/Namma space abstract.pdf` |
 | Proof of concept and web viewer link: a document with a working free-roaming link | a short document containing https://namma-space-documentation.pages.dev/ and https://namma-space.pages.dev/room/ |
 | Demonstration video, 3 to 5 minutes: project scope, capture process and the 3D web walkthrough | narrated demo video, 4 minutes 55 seconds, also embedded on the project page |
 | Code repository: a link or folder with setup instructions to rebuild the model, and sample data in a test directory | the Namma-Space repository, its README and run guide, and `tests/data/sample_scene.zip`; the repository must be viewable by the judges |

@@ -92,7 +92,7 @@ Use this if your laptop cannot train. Parts 1 and 3 run on the laptop, part 2 on
 
 ## Step 0 - Film the video
 
-- Follow the tested settings in `docs/capture-sop.md` (Room scene: landscape, 1080p at 30 fps, Pro mode, manual focus, 1/100 s, ISO 800, 5000 K, EV 0). Phone at chest or eye height, tilted slightly down. 4K at 30 fps (3840x2160) gives sharper frames: the 4K hallway and bedroom scene scored PSNR 29.12 dB on held-out frames, the best of our scenes (the 1080p Room scored 27.14 dB). Keep disk free: a 7-minute 4K video is 3-4 GB.
+- Follow the tested settings in `docs/capture-sop.md` (Room scene: landscape, 1080p at 30 fps, Pro mode, manual focus, 1/100 s, ISO 800, 5000 K, EV 0). Phone at chest or eye height, tilted slightly down. 4K (3840x2160) gives sharper frames: the 4K hallway and bedroom scene, recorded at about 15 fps, scored PSNR 29.12 dB on held-out frames, the best of our scenes (the 1080p Room scored 27.14 dB). Keep disk free: a 7-minute 4K video is 3-4 GB.
 - Switch off bright ceiling lamps and close curtains where you can: glossy floors and wardrobes reflect them, and a splat can only fake a reflection with ghost copies.
 - **One continuous walk at the same height and angle.** Never raise the phone toward the ceiling for a second lap; that bent v1.
 - Walk slowly (about half a metre a second), turn slowly. Keep about 1 m from walls. Do not fill the frame with a plain wall or curtain.
