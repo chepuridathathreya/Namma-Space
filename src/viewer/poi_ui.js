@@ -116,9 +116,17 @@
       cross.hidden = !viewer.isLocked() && !viewer.editing;
     }
 
+    function coveredLift() {
+      const box = dock.getBoundingClientRect(), width = window.innerWidth, height = window.innerHeight;
+      if (!(box.left < width / 2 && box.right > width / 2 && box.top < height)) return 0;
+      const bottom = Math.max(height * 0.25, box.top - 70), target = (60 + bottom) / 2;
+      return Math.atan((height / 2 - target) / (height / 2) * Math.tan(camera.fov * Math.PI / 360));
+    }
+
     function facing(fromX, fromZ, poi) {
-      const dx = poi.x - fromX, dz = poi.z - fromZ;
-      return { yaw: Math.atan2(-dx, -dz), pitch: clamp(Math.atan2(poi.y - eyeY, Math.hypot(dx, dz)), -0.6, 0.5) };
+      const dx = poi.x - fromX, dz = poi.z - fromZ, toward = Math.atan2(poi.y - eyeY, Math.hypot(dx, dz));
+      const lift = poi.id ? coveredLift() : 0;
+      return { yaw: Math.atan2(-dx, -dz), pitch: lift > 0 ? clamp(toward - lift, -1.25, 0.5) : clamp(toward, -0.6, 0.5) };
     }
 
     function planRoute() {

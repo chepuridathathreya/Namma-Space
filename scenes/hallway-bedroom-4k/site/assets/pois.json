@@ -14,7 +14,11 @@
       "x": -3.46,
       "y": 1.3,
       "z": -0.43,
-      "description": "Wooden entrance door at the hallway end, with the doormat in front"
+      "description": "Wooden entrance door at the hallway end, with the doormat in front",
+      "stand": {
+        "x": -2.88,
+        "z": -0.23
+      }
     },
     {
       "id": "tv",
@@ -39,9 +43,9 @@
         "cooler"
       ],
       "category": "appliance",
-      "x": 0.3,
-      "y": 0.53,
-      "z": -1.21,
+      "x": 0.5,
+      "y": 1.15,
+      "z": -1.35,
       "description": "Grey refrigerator in the kitchen corner, next to the water cans"
     },
     {
@@ -56,7 +60,11 @@
       "x": -1.64,
       "y": 0.44,
       "z": -0.94,
-      "description": "Single bed with a dark frame and a pink cloth over the back, along the hallway wall"
+      "description": "Single bed with a dark frame and a pink cloth over the back, along the hallway wall",
+      "stand": {
+        "x": -2.02,
+        "z": -0.48
+      }
     },
     {
       "id": "hall-window",
@@ -69,21 +77,11 @@
       "x": -1.48,
       "y": 1.6,
       "z": 1.49,
-      "description": "Barred window on the hallway wall, next to the TV cabinet"
-    },
-    {
-      "id": "kitchen-cabinet",
-      "name": "Kitchen Cabinet",
-      "aliases": [
-        "glass cabinet",
-        "crockery cabinet",
-        "dish cabinet"
-      ],
-      "category": "furniture",
-      "x": -0.47,
-      "y": 1.98,
-      "z": -2.97,
-      "description": "White cabinet with glass doors above the kitchen counter and stove"
+      "description": "Barred window on the hallway wall, next to the TV cabinet",
+      "stand": {
+        "x": -1.75,
+        "z": 0.54
+      }
     },
     {
       "id": "kitchen-wall-cabinet",
@@ -98,19 +96,11 @@
       "x": 0.68,
       "y": 1.65,
       "z": -0.97,
-      "description": "Brown wooden cabinets with handles, fixed high on the kitchen wall"
-    },
-    {
-      "id": "ceiling-fan",
-      "name": "Ceiling Fan",
-      "aliases": [
-        "fan"
-      ],
-      "category": "appliance",
-      "x": 0.11,
-      "y": 2.15,
-      "z": -1.08,
-      "description": "Ceiling fan in the hallway, above the kitchen end"
+      "description": "Brown wooden cabinets with handles, fixed high on the kitchen wall",
+      "stand": {
+        "x": 0.07,
+        "z": -1.42
+      }
     },
     {
       "id": "bedroom-bed",
@@ -121,10 +111,14 @@
         "mattress"
       ],
       "category": "furniture",
-      "x": 1.14,
-      "y": 0.64,
-      "z": -1.28,
-      "description": "Double bed with a floral cover and a white headboard in the bedroom"
+      "x": 1.7,
+      "y": 0.65,
+      "z": -0.95,
+      "description": "Double bed with a floral cover and a white headboard in the bedroom",
+      "stand": {
+        "x": 2.2,
+        "z": -0.86
+      }
     },
     {
       "id": "laptop",
@@ -137,22 +131,11 @@
       "x": 1.35,
       "y": 0.51,
       "z": -0.36,
-      "description": "Laptop open on the bed"
-    },
-    {
-      "id": "bedroom-switchboard",
-      "name": "Switchboard",
-      "aliases": [
-        "switch",
-        "switches",
-        "socket",
-        "plug point"
-      ],
-      "category": "electrical",
-      "x": 0.65,
-      "y": 1.22,
-      "z": -0.17,
-      "description": "Switch panel with a socket on the bedroom wall, near the bed"
+      "description": "Laptop open on the bed",
+      "stand": {
+        "x": 2.08,
+        "z": -0.34
+      }
     },
     {
       "id": "bedroom-window",
@@ -166,7 +149,11 @@
       "x": 2.5,
       "y": 1.57,
       "z": -2.06,
-      "description": "Bedroom window with the blue curtain, above the bed"
+      "description": "Bedroom window with the blue curtain, above the bed",
+      "stand": {
+        "x": 2.57,
+        "z": -1.21
+      }
     },
     {
       "id": "wardrobe",
@@ -177,43 +164,82 @@
         "cupboard"
       ],
       "category": "furniture",
-      "x": 2.86,
-      "y": 1.6,
-      "z": 0.52,
-      "description": "Dark sliding-door wardrobe on the bedroom wall"
+      "x": 2.75,
+      "y": 1.45,
+      "z": 0.35,
+      "description": "Dark sliding-door wardrobe on the bedroom wall",
+      "stand": {
+        "x": 1.96,
+        "z": 0.17
+      }
     },
     {
       "id": "place_14",
-      "name": "sink",
+      "name": "Sink",
       "aliases": [
         "washbashin",
         "tap"
       ],
       "category": "furniture",
-      "x": 0.97,
-      "y": 0.84,
-      "z": -2.34,
-      "description": "",
+      "x": 1.26,
+      "y": 0.45,
+      "z": -2.65,
+      "description": "A white sink with tap",
       "stand": {
-        "x": -0.01,
-        "z": -1.45
+        "x": -0.08,
+        "z": -1.84
       }
     },
     {
       "id": "place_15",
-      "name": "chair",
+      "name": "Chair",
       "aliases": [
         "chairs",
         "seat"
       ],
       "category": "furniture",
-      "x": -1.21,
-      "y": 0.38,
-      "z": 1.03,
-      "description": "a chair to sit",
+      "x": -1.17,
+      "y": 0.54,
+      "z": 1.13,
+      "description": "A brown color chair",
       "stand": {
-        "x": -1.43,
+        "x": -1.4,
         "z": 0.28
+      }
+    },
+    {
+      "id": "place_15_2",
+      "name": "Switchboard",
+      "aliases": [
+        "switch",
+        "board"
+      ],
+      "category": "electrical",
+      "x": 0.6,
+      "y": 1.29,
+      "z": -0.47,
+      "description": "a switchborad to tun on the lights or fans",
+      "stand": {
+        "x": -0.39,
+        "z": -0.82
+      }
+    },
+    {
+      "id": "place_15_3",
+      "name": "Washroom",
+      "aliases": [
+        "toilet",
+        "restroom",
+        "bathroom"
+      ],
+      "category": "room",
+      "x": 1.52,
+      "y": 1.45,
+      "z": 1.6,
+      "description": "A blue washroom door",
+      "stand": {
+        "x": 1.62,
+        "z": 1.16
       }
     }
   ]
